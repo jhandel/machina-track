@@ -1,14 +1,14 @@
-import { PrismaClient } from '@/generated/prisma';
 import { v4 as uuidv4 } from 'uuid';
 import type { CuttingTool } from '@/lib/types';
 import type { CuttingToolRepository } from '../../interfaces';
 import { DatabaseError, NotFoundError } from '../../interfaces';
-
-const prisma = new PrismaClient();
+import { getPrismaClient } from '../../prisma-client';
 
 export class PrismaCuttingToolRepository implements CuttingToolRepository {
   async findById(id: string): Promise<CuttingTool | null> {
+      const prisma = await getPrismaClient();
     try {
+      const prisma = await getPrismaClient();
       const tool = await prisma.cutting_tools.findUnique({ where: { id } });
       return tool ? this.mapToCuttingTool(tool) : null;
     } catch (error) {
@@ -17,7 +17,9 @@ export class PrismaCuttingToolRepository implements CuttingToolRepository {
   }
 
   async findAll(limit: number = 100, offset: number = 0): Promise<CuttingTool[]> {
+      const prisma = await getPrismaClient();
     try {
+      const prisma = await getPrismaClient();
       const tools = await prisma.cutting_tools.findMany({
         skip: offset,
         take: limit,
@@ -30,7 +32,9 @@ export class PrismaCuttingToolRepository implements CuttingToolRepository {
   }
 
   async create(item: Omit<CuttingTool, 'id'>): Promise<CuttingTool> {
+      const prisma = await getPrismaClient();
     try {
+      const prisma = await getPrismaClient();
       const created = await prisma.cutting_tools.create({
         data: {
           id: uuidv4(),
@@ -58,6 +62,7 @@ export class PrismaCuttingToolRepository implements CuttingToolRepository {
   }
 
   async update(id: string, item: Partial<CuttingTool>): Promise<CuttingTool | null> {
+      const prisma = await getPrismaClient();
     try {
       const updated = await prisma.cutting_tools.update({
         where: { id },
@@ -89,6 +94,7 @@ export class PrismaCuttingToolRepository implements CuttingToolRepository {
   }
 
   async delete(id: string): Promise<boolean> {
+      const prisma = await getPrismaClient();
     try {
       await prisma.cutting_tools.delete({ where: { id } });
       return true;
@@ -101,6 +107,7 @@ export class PrismaCuttingToolRepository implements CuttingToolRepository {
   }
 
   async count(): Promise<number> {
+      const prisma = await getPrismaClient();
     try {
       return await prisma.cutting_tools.count();
     } catch (error) {
@@ -109,6 +116,7 @@ export class PrismaCuttingToolRepository implements CuttingToolRepository {
   }
 
   async findByLocation(location: string): Promise<CuttingTool[]> {
+      const prisma = await getPrismaClient();
     try {
       const tools = await prisma.cutting_tools.findMany({
         where: { location },
@@ -121,6 +129,7 @@ export class PrismaCuttingToolRepository implements CuttingToolRepository {
   }
 
   async search(query: string): Promise<CuttingTool[]> {
+      const prisma = await getPrismaClient();
     try {
       const tools = await prisma.cutting_tools.findMany({
         where: {
@@ -143,10 +152,11 @@ export class PrismaCuttingToolRepository implements CuttingToolRepository {
   }
 
   async findLowInventory(): Promise<CuttingTool[]> {
+      const prisma = await getPrismaClient();
     try {
       const tools = await prisma.cutting_tools.findMany({
         where: {
-          quantity: { lte: prisma.cutting_tools.fields.min_quantity },
+          quantity: { lte: 5 },
         },
         orderBy: [
           { quantity: 'asc' },
@@ -160,6 +170,7 @@ export class PrismaCuttingToolRepository implements CuttingToolRepository {
   }
 
   async findByType(type: string): Promise<CuttingTool[]> {
+      const prisma = await getPrismaClient();
     try {
       const tools = await prisma.cutting_tools.findMany({
         where: { type },
@@ -172,6 +183,7 @@ export class PrismaCuttingToolRepository implements CuttingToolRepository {
   }
 
   async findEndOfLife(date?: string): Promise<CuttingTool[]> {
+      const prisma = await getPrismaClient();
     try {
       const checkDate = date || new Date().toISOString().split('T')[0];
       const tools = await prisma.cutting_tools.findMany({
@@ -187,6 +199,7 @@ export class PrismaCuttingToolRepository implements CuttingToolRepository {
   }
 
   async updateQuantity(id: string, quantity: number): Promise<CuttingTool | null> {
+      const prisma = await getPrismaClient();
     try {
       const updated = await prisma.cutting_tools.update({
         where: { id },

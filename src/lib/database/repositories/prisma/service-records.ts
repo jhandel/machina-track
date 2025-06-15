@@ -1,13 +1,13 @@
-import { PrismaClient } from '@/generated/prisma';
+import { getPrismaClient } from "../../prisma-client";
 import { v4 as uuidv4 } from 'uuid';
 import type { ServiceRecord } from '@/lib/types';
 import type { ServiceRecordRepository } from '../../interfaces';
 import { DatabaseError } from '../../interfaces';
 
-const prisma = new PrismaClient();
 
 export class PrismaServiceRecordRepository implements ServiceRecordRepository {
   async findById(id: string): Promise<ServiceRecord | null> {
+      const prisma = await getPrismaClient();
     try {
       const record = await prisma.service_records.findUnique({ where: { id } });
       return record ? this.mapToServiceRecord(record) : null;
@@ -17,6 +17,7 @@ export class PrismaServiceRecordRepository implements ServiceRecordRepository {
   }
 
   async findAll(limit: number = 100, offset: number = 0): Promise<ServiceRecord[]> {
+      const prisma = await getPrismaClient();
     try {
       const records = await prisma.service_records.findMany({
         skip: offset,
@@ -30,6 +31,7 @@ export class PrismaServiceRecordRepository implements ServiceRecordRepository {
   }
 
   async create(item: Omit<ServiceRecord, 'id'>): Promise<ServiceRecord> {
+      const prisma = await getPrismaClient();
     try {
       const created = await prisma.service_records.create({
         data: {
@@ -49,6 +51,7 @@ export class PrismaServiceRecordRepository implements ServiceRecordRepository {
   }
 
   async update(id: string, item: Partial<ServiceRecord>): Promise<ServiceRecord | null> {
+      const prisma = await getPrismaClient();
     try {
       const updated = await prisma.service_records.update({
         where: { id },
@@ -71,6 +74,7 @@ export class PrismaServiceRecordRepository implements ServiceRecordRepository {
   }
 
   async delete(id: string): Promise<boolean> {
+      const prisma = await getPrismaClient();
     try {
       await prisma.service_records.delete({ where: { id } });
       return true;
@@ -83,6 +87,7 @@ export class PrismaServiceRecordRepository implements ServiceRecordRepository {
   }
 
   async count(): Promise<number> {
+      const prisma = await getPrismaClient();
     try {
       return await prisma.service_records.count();
     } catch (error) {
@@ -91,6 +96,7 @@ export class PrismaServiceRecordRepository implements ServiceRecordRepository {
   }
 
   async findByTaskId(taskId: string): Promise<ServiceRecord[]> {
+      const prisma = await getPrismaClient();
     try {
       const records = await prisma.service_records.findMany({
         where: { maintenance_task_id: taskId },
@@ -103,6 +109,7 @@ export class PrismaServiceRecordRepository implements ServiceRecordRepository {
   }
 
   async findByPerformer(performedBy: string): Promise<ServiceRecord[]> {
+      const prisma = await getPrismaClient();
     try {
       const records = await prisma.service_records.findMany({
         where: { performed_by: performedBy },
@@ -115,6 +122,7 @@ export class PrismaServiceRecordRepository implements ServiceRecordRepository {
   }
 
   async findByDateRange(startDate: string, endDate: string): Promise<ServiceRecord[]> {
+      const prisma = await getPrismaClient();
     try {
       const records = await prisma.service_records.findMany({
         where: {
@@ -132,6 +140,7 @@ export class PrismaServiceRecordRepository implements ServiceRecordRepository {
   }
 
   async findByEquipmentId(equipmentId: string): Promise<ServiceRecord[]> {
+      const prisma = await getPrismaClient();
     try {
       const records = await prisma.service_records.findMany({
         where: { maintenance_tasks: { equipment_id: equipmentId } },

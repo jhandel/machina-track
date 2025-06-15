@@ -1,5 +1,9 @@
 import type { LucideIcon } from 'lucide-react';
 import { LayoutDashboard, Wrench, Ruler, Package, Bot, Factory, ClipboardList, Settings2 } from 'lucide-react';
+import type { Equipment } from './types';
+import type { MetrologyTool } from './types';
+import type { CalibrationLog } from './types';
+import type { MaintenanceTask } from './types';
 
 export const APP_NAME = "MachinaTrack";
 export const APP_DESCRIPTION = "Tool tracking software for machine shops.";

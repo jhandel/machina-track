@@ -93,12 +93,6 @@ export interface MachineLogEntry {
   notes?: string;
 }
 
-// For AI Feature - Input for predictToolFailure
-export type { PredictToolFailureInput, PredictToolFailureOutput } from '@/ai/flows/predict-tool-failure';
-
-// For AI Feature - Input for generateMaintenanceSchedule
-export type { GenerateMaintenanceScheduleInput, GenerateMaintenanceScheduleOutput } from '@/ai/flows/maintenance-schedule-generator';
-
 // Generic type for form modes
 export type FormMode = 'create' | 'edit' | 'view';
 

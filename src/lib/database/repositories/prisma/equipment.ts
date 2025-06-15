@@ -1,14 +1,14 @@
-import { PrismaClient } from '@/generated/prisma';
 import { v4 as uuidv4 } from 'uuid';
 import type { Equipment } from '@/lib/types';
 import type { EquipmentRepository } from '../../interfaces';
 import { DatabaseError, NotFoundError, DuplicateError } from '../../interfaces';
-
-const prisma = new PrismaClient();
+import { getPrismaClient } from '../../prisma-client';
 
 export class PrismaEquipmentRepository implements EquipmentRepository {
   async findById(id: string): Promise<Equipment | null> {
+      const prisma = await getPrismaClient();
     try {
+      const prisma = await getPrismaClient();
       const equipment = await prisma.equipment.findUnique({ where: { id } });
       return equipment ? this.mapToEquipment(equipment) : null;
     } catch (error) {
@@ -17,7 +17,9 @@ export class PrismaEquipmentRepository implements EquipmentRepository {
   }
 
   async findAll(limit: number = 100, offset: number = 0): Promise<Equipment[]> {
+      const prisma = await getPrismaClient();
     try {
+      const prisma = await getPrismaClient();
       const equipmentList = await prisma.equipment.findMany({
         skip: offset,
         take: limit,
@@ -30,7 +32,9 @@ export class PrismaEquipmentRepository implements EquipmentRepository {
   }
 
   async create(item: Omit<Equipment, 'id'>): Promise<Equipment> {
+      const prisma = await getPrismaClient();
     try {
+      const prisma = await getPrismaClient();
       const created = await prisma.equipment.create({
         data: {
           id: uuidv4(),
@@ -54,7 +58,9 @@ export class PrismaEquipmentRepository implements EquipmentRepository {
   }
 
   async update(id: string, item: Partial<Equipment>): Promise<Equipment | null> {
+      const prisma = await getPrismaClient();
     try {
+      const prisma = await getPrismaClient();
       const updated = await prisma.equipment.update({
         where: { id },
         data: {
@@ -81,7 +87,9 @@ export class PrismaEquipmentRepository implements EquipmentRepository {
   }
 
   async delete(id: string): Promise<boolean> {
+      const prisma = await getPrismaClient();
     try {
+      const prisma = await getPrismaClient();
       await prisma.equipment.delete({ where: { id } });
       return true;
     } catch (error: any) {
@@ -93,7 +101,9 @@ export class PrismaEquipmentRepository implements EquipmentRepository {
   }
 
   async count(): Promise<number> {
+      const prisma = await getPrismaClient();
     try {
+      const prisma = await getPrismaClient();
       return await prisma.equipment.count();
     } catch (error) {
       throw new DatabaseError(`Failed to count equipment: ${error}`);
@@ -101,7 +111,9 @@ export class PrismaEquipmentRepository implements EquipmentRepository {
   }
 
   async findByStatus(status: Equipment['status']): Promise<Equipment[]> {
+      const prisma = await getPrismaClient();
     try {
+      const prisma = await getPrismaClient();
       const equipmentList = await prisma.equipment.findMany({
         where: { status },
         orderBy: { updated_at: 'desc' },
@@ -113,7 +125,9 @@ export class PrismaEquipmentRepository implements EquipmentRepository {
   }
 
   async findByLocation(location: string): Promise<Equipment[]> {
+      const prisma = await getPrismaClient();
     try {
+      const prisma = await getPrismaClient();
       const equipmentList = await prisma.equipment.findMany({
         where: { location },
         orderBy: { name: 'asc' },
@@ -125,7 +139,9 @@ export class PrismaEquipmentRepository implements EquipmentRepository {
   }
 
   async findBySerialNumber(serialNumber: string): Promise<Equipment | null> {
+      const prisma = await getPrismaClient();
     try {
+      const prisma = await getPrismaClient();
       const equipment = await prisma.equipment.findUnique({ where: { serial_number: serialNumber } });
       return equipment ? this.mapToEquipment(equipment) : null;
     } catch (error) {
@@ -134,7 +150,9 @@ export class PrismaEquipmentRepository implements EquipmentRepository {
   }
 
   async search(query: string): Promise<Equipment[]> {
+      const prisma = await getPrismaClient();
     try {
+      const prisma = await getPrismaClient();
       const equipmentList = await prisma.equipment.findMany({
         where: {
           OR: [

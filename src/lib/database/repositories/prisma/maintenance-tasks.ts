@@ -1,13 +1,13 @@
-import { PrismaClient } from '@/generated/prisma';
+import { getPrismaClient } from "../../prisma-client";
 import { v4 as uuidv4 } from 'uuid';
 import type { MaintenanceTask } from '@/lib/types';
 import type { MaintenanceTaskRepository } from '../../interfaces';
 import { DatabaseError } from '../../interfaces';
 
-const prisma = new PrismaClient();
 
 export class PrismaMaintenanceTaskRepository implements MaintenanceTaskRepository {
   async findById(id: string): Promise<MaintenanceTask | null> {
+      const prisma = await getPrismaClient();
     try {
       const task = await prisma.maintenance_tasks.findUnique({ where: { id } });
       return task ? this.mapToMaintenanceTask(task) : null;
@@ -17,6 +17,7 @@ export class PrismaMaintenanceTaskRepository implements MaintenanceTaskRepositor
   }
 
   async findAll(limit: number = 100, offset: number = 0): Promise<MaintenanceTask[]> {
+      const prisma = await getPrismaClient();
     try {
       const tasks = await prisma.maintenance_tasks.findMany({
         skip: offset,
@@ -30,6 +31,7 @@ export class PrismaMaintenanceTaskRepository implements MaintenanceTaskRepositor
   }
 
   async create(item: Omit<MaintenanceTask, 'id'>): Promise<MaintenanceTask> {
+      const prisma = await getPrismaClient();
     try {
       const created = await prisma.maintenance_tasks.create({
         data: {
@@ -51,6 +53,7 @@ export class PrismaMaintenanceTaskRepository implements MaintenanceTaskRepositor
   }
 
   async update(id: string, item: Partial<MaintenanceTask>): Promise<MaintenanceTask | null> {
+      const prisma = await getPrismaClient();
     try {
       const updated = await prisma.maintenance_tasks.update({
         where: { id },
@@ -75,6 +78,7 @@ export class PrismaMaintenanceTaskRepository implements MaintenanceTaskRepositor
   }
 
   async delete(id: string): Promise<boolean> {
+      const prisma = await getPrismaClient();
     try {
       await prisma.maintenance_tasks.delete({ where: { id } });
       return true;
@@ -87,6 +91,7 @@ export class PrismaMaintenanceTaskRepository implements MaintenanceTaskRepositor
   }
 
   async count(): Promise<number> {
+      const prisma = await getPrismaClient();
     try {
       return await prisma.maintenance_tasks.count();
     } catch (error) {
@@ -95,6 +100,7 @@ export class PrismaMaintenanceTaskRepository implements MaintenanceTaskRepositor
   }
 
   async findByEquipmentId(equipmentId: string): Promise<MaintenanceTask[]> {
+      const prisma = await getPrismaClient();
     try {
       const tasks = await prisma.maintenance_tasks.findMany({
         where: { equipment_id: equipmentId },
@@ -107,6 +113,7 @@ export class PrismaMaintenanceTaskRepository implements MaintenanceTaskRepositor
   }
 
   async findByStatus(status: MaintenanceTask['status']): Promise<MaintenanceTask[]> {
+      const prisma = await getPrismaClient();
     try {
       const tasks = await prisma.maintenance_tasks.findMany({
         where: { status },
@@ -119,6 +126,7 @@ export class PrismaMaintenanceTaskRepository implements MaintenanceTaskRepositor
   }
 
   async findUpcoming(days: number = 7): Promise<MaintenanceTask[]> {
+      const prisma = await getPrismaClient();
     try {
       const now = new Date();
       const future = new Date();
@@ -141,6 +149,7 @@ export class PrismaMaintenanceTaskRepository implements MaintenanceTaskRepositor
   }
 
   async findOverdue(date?: string): Promise<MaintenanceTask[]> {
+      const prisma = await getPrismaClient();
     try {
       const compareDate = date || new Date().toISOString();
       const tasks = await prisma.maintenance_tasks.findMany({
@@ -157,6 +166,7 @@ export class PrismaMaintenanceTaskRepository implements MaintenanceTaskRepositor
   }
 
   async findByAssignee(assignedTo: string): Promise<MaintenanceTask[]> {
+      const prisma = await getPrismaClient();
     try {
       const tasks = await prisma.maintenance_tasks.findMany({
         where: { assigned_to: assignedTo },
@@ -169,6 +179,7 @@ export class PrismaMaintenanceTaskRepository implements MaintenanceTaskRepositor
   }
 
   async search(query: string): Promise<MaintenanceTask[]> {
+      const prisma = await getPrismaClient();
     try {
       const tasks = await prisma.maintenance_tasks.findMany({
         where: {

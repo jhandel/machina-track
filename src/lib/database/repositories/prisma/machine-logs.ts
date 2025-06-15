@@ -1,13 +1,13 @@
-import { PrismaClient } from '@/generated/prisma';
+import { getPrismaClient } from "../../prisma-client";
 import { v4 as uuidv4 } from 'uuid';
 import type { MachineLogEntry } from '@/lib/types';
 import type { MachineLogRepository } from '../../interfaces';
 import { DatabaseError } from '../../interfaces';
 
-const prisma = new PrismaClient();
 
 export class PrismaMachineLogRepository implements MachineLogRepository {
   async findById(id: string): Promise<MachineLogEntry | null> {
+      const prisma = await getPrismaClient();
     try {
       const entry = await prisma.machine_log_entries.findUnique({ where: { id } });
       return entry ? this.mapToMachineLogEntry(entry) : null;
@@ -17,6 +17,7 @@ export class PrismaMachineLogRepository implements MachineLogRepository {
   }
 
   async findAll(limit: number = 100, offset: number = 0): Promise<MachineLogEntry[]> {
+      const prisma = await getPrismaClient();
     try {
       const entries = await prisma.machine_log_entries.findMany({
         skip: offset,
@@ -30,6 +31,7 @@ export class PrismaMachineLogRepository implements MachineLogRepository {
   }
 
   async create(item: Omit<MachineLogEntry, 'id'>): Promise<MachineLogEntry> {
+      const prisma = await getPrismaClient();
     try {
       const created = await prisma.machine_log_entries.create({
         data: {
@@ -49,6 +51,7 @@ export class PrismaMachineLogRepository implements MachineLogRepository {
   }
 
   async update(id: string, item: Partial<MachineLogEntry>): Promise<MachineLogEntry | null> {
+      const prisma = await getPrismaClient();
     try {
       const updated = await prisma.machine_log_entries.update({
         where: { id },
@@ -71,6 +74,7 @@ export class PrismaMachineLogRepository implements MachineLogRepository {
   }
 
   async delete(id: string): Promise<boolean> {
+      const prisma = await getPrismaClient();
     try {
       await prisma.machine_log_entries.delete({ where: { id } });
       return true;
@@ -83,6 +87,7 @@ export class PrismaMachineLogRepository implements MachineLogRepository {
   }
 
   async count(): Promise<number> {
+      const prisma = await getPrismaClient();
     try {
       return await prisma.machine_log_entries.count();
     } catch (error) {
@@ -91,6 +96,7 @@ export class PrismaMachineLogRepository implements MachineLogRepository {
   }
 
   async findByEquipmentId(equipmentId: string, limit: number = 100): Promise<MachineLogEntry[]> {
+      const prisma = await getPrismaClient();
     try {
       const entries = await prisma.machine_log_entries.findMany({
         where: { equipment_id: equipmentId },
@@ -104,6 +110,7 @@ export class PrismaMachineLogRepository implements MachineLogRepository {
   }
 
   async findByDateRange(equipmentId: string, startDate: string, endDate: string): Promise<MachineLogEntry[]> {
+      const prisma = await getPrismaClient();
     try {
       const entries = await prisma.machine_log_entries.findMany({
         where: {
@@ -122,6 +129,7 @@ export class PrismaMachineLogRepository implements MachineLogRepository {
   }
 
   async findByErrorCode(errorCode: string): Promise<MachineLogEntry[]> {
+      const prisma = await getPrismaClient();
     try {
       const entries = await prisma.machine_log_entries.findMany({
         where: { error_code: errorCode },
@@ -134,6 +142,7 @@ export class PrismaMachineLogRepository implements MachineLogRepository {
   }
 
   async findByMetric(metricName: string): Promise<MachineLogEntry[]> {
+      const prisma = await getPrismaClient();
     try {
       const entries = await prisma.machine_log_entries.findMany({
         where: { metric_name: metricName },
@@ -146,6 +155,7 @@ export class PrismaMachineLogRepository implements MachineLogRepository {
   }
 
   async findRecentLogs(equipmentId: string, hours: number = 24): Promise<MachineLogEntry[]> {
+      const prisma = await getPrismaClient();
     try {
       const sinceDate = new Date();
       sinceDate.setHours(sinceDate.getHours() - hours);

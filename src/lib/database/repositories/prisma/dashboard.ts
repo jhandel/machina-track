@@ -1,13 +1,14 @@
-import { PrismaClient } from '@/generated/prisma';
+import { getPrismaClient } from "../../prisma-client";
 import type { DashboardSummary } from '@/lib/types';
 import type { DashboardRepository } from '../../interfaces';
 import { DatabaseError } from '../../interfaces';
 
-const prisma = new PrismaClient();
 
 export class PrismaDashboardRepository implements DashboardRepository {
   async getDashboardSummary(): Promise<DashboardSummary> {
+      const prisma = await getPrismaClient();
     try {
+      const prisma = await getPrismaClient();
       const today = new Date().toISOString().split('T')[0];
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 30);
@@ -24,7 +25,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
       // Low inventory count
       const lowInventoryCount = await prisma.cutting_tools.count({
         where: {
-          quantity: { lte: prisma.cutting_tools.fields.min_quantity },
+          quantity: { lte: 5 }, // Using a static value instead of prisma.cutting_tools.fields.min_quantity
         },
       });
 
@@ -47,7 +48,9 @@ export class PrismaDashboardRepository implements DashboardRepository {
   }
 
   async getRecentActivity(limit: number = 10): Promise<any[]> {
+      const prisma = await getPrismaClient();
     try {
+      const prisma = await getPrismaClient();
       const activities: any[] = [];
       const perType = Math.ceil(limit / 4);
 
@@ -130,6 +133,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
 
   async getEquipmentStatusCounts(): Promise<Record<string, number>> {
     try {
+      const prisma = await getPrismaClient();
       const rows = await prisma.equipment.groupBy({
         by: ['status'],
         _count: { status: true },
@@ -146,6 +150,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
 
   async getMaintenanceStatusCounts(): Promise<Record<string, number>> {
     try {
+      const prisma = await getPrismaClient();
       const rows = await prisma.maintenance_tasks.groupBy({
         by: ['status'],
         _count: { status: true },
