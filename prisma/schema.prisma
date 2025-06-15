@@ -1,0 +1,164 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model calibration_logs {
+  id                String   @id
+  metrology_tool_id String
+  date              String
+  performed_by      String
+  notes             String?
+  result            String
+  certificate_url   String?
+  next_due_date     String?
+  created_at        DateTime @default(now())
+  metrology_tools   metrology_tools @relation(fields: [metrology_tool_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([metrology_tool_id], map: "idx_calibration_logs_tool")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model cutting_tools {
+  id                        String   @id
+  name                      String
+  type                      String
+  material                  String?
+  size                      String?
+  quantity                  Int       @default(0)
+  min_quantity              Int       @default(0)
+  location                  String
+  tool_life_hours           Float?
+  remaining_tool_life_hours Float?
+  last_used_date            String?
+  end_of_life_date          String?
+  supplier                  String?
+  cost_per_unit             Float?
+  image_url                 String?
+  notes                     String?
+  created_at                DateTime @default(now())
+  updated_at                DateTime @default(now())
+
+  @@index([quantity], map: "idx_cutting_tools_quantity")
+  @@index([location], map: "idx_cutting_tools_location")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model machine_log_entries {
+  id           String   @id
+  equipment_id String
+  timestamp    String
+  error_code   String?
+  metric_name  String
+  metric_value String
+  notes        String?
+  created_at   DateTime @default(now())
+  equipment    equipment @relation(fields: [equipment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([timestamp], map: "idx_machine_logs_timestamp")
+  @@index([equipment_id], map: "idx_machine_logs_equipment")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model maintenance_parts {
+  id                  String   @id
+  maintenance_task_id String
+  part_name           String
+  quantity            Int      @default(1)
+  created_at          DateTime @default(now())
+  maintenance_tasks   maintenance_tasks @relation(fields: [maintenance_task_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model maintenance_tasks {
+  id                  String   @id
+  equipment_id        String
+  description         String
+  frequency_days      Int?
+  last_performed_date String?
+  next_due_date       String?
+  assigned_to         String?
+  notes               String?
+  status              String   @default("pending")
+  created_at          DateTime @default(now())
+  updated_at          DateTime @default(now())
+  maintenance_parts   maintenance_parts[]
+  equipment           equipment @relation(fields: [equipment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  service_records     service_records[]
+
+  @@index([equipment_id], map: "idx_maintenance_tasks_equipment")
+  @@index([next_due_date], map: "idx_maintenance_tasks_next_due")
+  @@index([status], map: "idx_maintenance_tasks_status")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model service_record_attachments {
+  id                String   @id
+  service_record_id String
+  attachment_url    String
+  created_at        DateTime @default(now())
+  service_records   service_records @relation(fields: [service_record_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model service_records {
+  id                         String   @id
+  maintenance_task_id        String
+  date                       String
+  performed_by               String
+  description_of_work        String
+  cost                       Float?
+  notes                      String?
+  created_at                 DateTime @default(now())
+  service_record_attachments service_record_attachments[]
+  maintenance_tasks          maintenance_tasks @relation(fields: [maintenance_task_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([maintenance_task_id], map: "idx_service_records_task")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model metrology_tools {
+  id                        String   @id
+  name                      String
+  type                      String
+  serial_number             String   @unique(map: "sqlite_autoindex_metrology_tools_2")
+  manufacturer              String?
+  calibration_interval_days Int
+  last_calibration_date     String?
+  next_calibration_date     String?
+  location                  String?
+  status                    String   @default("calibrated")
+  image_url                 String?
+  notes                     String?
+  created_at                DateTime @default(now())
+  updated_at                DateTime @default(now())
+  calibration_logs          calibration_logs[]
+
+  @@index([next_calibration_date], map: "idx_metrology_tools_next_calibration")
+  @@index([status], map: "idx_metrology_tools_status")
+}
+
+model equipment {
+  id                  String   @id
+  name                String
+  model               String
+  serial_number       String   @unique(map: "sqlite_autoindex_equipment_2")
+  location            String
+  purchase_date       String?
+  status              String   @default("operational")
+  image_url           String?
+  notes               String?
+  created_at          DateTime @default(now())
+  updated_at          DateTime @default(now())
+  machine_log_entries machine_log_entries[]
+  maintenance_tasks   maintenance_tasks[]
+
+  @@index([location], map: "idx_equipment_location")
+  @@index([status], map: "idx_equipment_status")
+}
