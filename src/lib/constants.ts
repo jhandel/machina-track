@@ -43,6 +43,11 @@ export const NAV_ITEMS: NavItem[] = [
     title: 'Maintenance',
     href: '/maintenance',
     icon: ClipboardList, 
+  },
+  {
+    title: 'Settings',
+    href: '/settings',
+    icon: Settings2, 
   }
 ];
 

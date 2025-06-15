@@ -93,17 +93,35 @@ class PrismaConnection {
     try {
       // Try to connect and run a simple query
       await this.instance!.$connect();
-      
-      // Check if any table exists by querying one of the models
-      await this.instance!.$queryRaw`SELECT name FROM sqlite_master WHERE type='table' LIMIT 1`;
-      
-      return false; // Database is accessible and has tables
+        // Cache the result for the life of this connection
+        if ((this as any)._migrationCheckResult !== undefined) {
+        return (this as any)._migrationCheckResult;
+        }
+
+        // Check if the _prisma_migrations table exists
+        const tables = await this.instance!.$queryRawUnsafe<any[]>(
+        `SELECT name FROM sqlite_master WHERE type='table' AND name='_prisma_migrations';`
+        );
+        if (!tables || tables.length === 0) {
+        // No migrations table, needs init
+        (this as any)._migrationCheckResult = true;
+        return true;
+        }
+
+        // Check for unapplied migrations
+        const unapplied = await this.instance!.$queryRawUnsafe<any[]>(
+        `SELECT * FROM _prisma_migrations WHERE finished_at IS NULL OR rolled_back_at IS NOT NULL;`
+        );
+        const needsMigration = unapplied && unapplied.length > 0;
+        (this as any)._migrationCheckResult = needsMigration;
+        return needsMigration;
     } catch (error) {
-      // If we can't query the database, it likely needs initialization
-      console.log('🔧 Database needs initialization:', (error as Error).message);
+      console.error('❌ Error checking database initialization:', error);
+      // If we can't connect, assume it needs initialization
       return true;
     }
   }
+
 
   /**
    * Deploy schema using appropriate strategy based on environment
@@ -125,7 +143,7 @@ class PrismaConnection {
         console.log('⚠️  No node_modules found, skipping automatic schema deployment');
         console.log('💡 Please run "npm install" and then "npm run db:push" manually');
       }
-      
+      (this as any)._migrationCheckResult = false; // Reset migration check result after deployment
       console.log('✅ Schema deployment completed successfully.');
     } catch (error) {
       console.error('❌ Schema deployment failed:', error);

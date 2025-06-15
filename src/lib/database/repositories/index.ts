@@ -11,6 +11,7 @@ import { PrismaCalibrationLogRepository } from './prisma/calibration-logs';
 import { PrismaDashboardRepository } from './prisma/dashboard';
 import { PrismaServiceRecordRepository } from './prisma/service-records';
 import { PrismaMachineLogRepository } from './prisma/machine-logs';
+import { PrismaSettingsRepository } from './prisma/settings';
 
 export class PrismaUnitOfWork implements UnitOfWork {
   public readonly equipment: any;
@@ -21,6 +22,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
   public readonly serviceRecords: any;
   public readonly machineLogs: any;
   public readonly dashboard: any;
+  public readonly settings: any;
 
   constructor() {
     // Initialize repositories
@@ -32,6 +34,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
     this.serviceRecords = new PrismaServiceRecordRepository();
     this.machineLogs = new PrismaMachineLogRepository();
     this.dashboard = new PrismaDashboardRepository(); // Dashboard repo remains as is
+    this.settings = new PrismaSettingsRepository();
   }
 
   async executeTransaction<T>(operation: (uow: UnitOfWork) => Promise<T>): Promise<T> {

@@ -40,3 +40,12 @@ export type {
   MachineLogEntry,
   DashboardSummary 
 } from '@/lib/types';
+
+// Settings Service
+export { SettingsService } from './settings-service';
+export type {
+  CreateLocationRequest,
+  CreateManufacturerRequest,
+  CreateMetrologyToolTypeRequest,
+  CreateCuttingToolMaterialRequest
+} from './settings-service';

@@ -107,6 +107,66 @@ export interface DashboardRepository {
 }
 
 /**
+ * Settings data types
+ */
+export interface Location {
+  id: string;
+  name: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Manufacturer {
+  id: string;
+  name: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface MetrologyToolType {
+  id: string;
+  name: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CuttingToolMaterial {
+  id: string;
+  name: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Settings repository interface
+ */
+export interface SettingsRepository {
+  // Locations
+  getAllLocations(): Promise<Location[]>;
+  createLocation(name: string): Promise<Location>;
+  updateLocation(id: string, name: string): Promise<Location>;
+  deleteLocation(id: string): Promise<void>;
+  
+  // Manufacturers
+  getAllManufacturers(): Promise<Manufacturer[]>;
+  createManufacturer(name: string): Promise<Manufacturer>;
+  updateManufacturer(id: string, name: string): Promise<Manufacturer>;
+  deleteManufacturer(id: string): Promise<void>;
+  
+  // Metrology Tool Types
+  getAllMetrologyToolTypes(): Promise<MetrologyToolType[]>;
+  createMetrologyToolType(name: string): Promise<MetrologyToolType>;
+  updateMetrologyToolType(id: string, name: string): Promise<MetrologyToolType>;
+  deleteMetrologyToolType(id: string): Promise<void>;
+  
+  // Cutting Tool Materials
+  getAllCuttingToolMaterials(): Promise<CuttingToolMaterial[]>;
+  createCuttingToolMaterial(name: string): Promise<CuttingToolMaterial>;
+  updateCuttingToolMaterial(id: string, name: string): Promise<CuttingToolMaterial>;
+  deleteCuttingToolMaterial(id: string): Promise<void>;
+}
+
+/**
  * Unit of Work pattern for managing multiple repositories
  */
 export interface UnitOfWork {
@@ -118,6 +178,7 @@ export interface UnitOfWork {
   serviceRecords: ServiceRecordRepository;
   machineLogs: MachineLogRepository;
   dashboard: DashboardRepository;
+  settings: SettingsRepository;
   
   /**
    * Execute multiple operations in a single transaction

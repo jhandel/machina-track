@@ -162,3 +162,31 @@ model equipment {
   @@index([location], map: "idx_equipment_location")
   @@index([status], map: "idx_equipment_status")
 }
+
+model locations {
+  id         String   @id
+  name       String   @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+}
+
+model manufacturers {
+  id         String   @id
+  name       String   @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+}
+
+model metrology_tool_types {
+  id         String   @id
+  name       String   @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+}
+
+model cutting_tool_materials {
+  id         String   @id
+  name       String   @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+}

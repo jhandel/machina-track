@@ -345,6 +345,108 @@ class ApiClient {
       method: 'DELETE',
     });
   }
+
+  // Settings API methods
+  
+  // Locations
+  async getLocations() {
+    return this.request('/settings/locations');
+  }
+
+  async createLocation(data: { name: string }) {
+    return this.request('/settings/locations', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateLocation(id: string, data: { name: string }) {
+    return this.request(`/settings/locations/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteLocation(id: string) {
+    return this.request(`/settings/locations/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Manufacturers
+  async getManufacturers() {
+    return this.request('/settings/manufacturers');
+  }
+
+  async createManufacturer(data: { name: string }) {
+    return this.request('/settings/manufacturers', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateManufacturer(id: string, data: { name: string }) {
+    return this.request(`/settings/manufacturers/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteManufacturer(id: string) {
+    return this.request(`/settings/manufacturers/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Metrology Tool Types
+  async getMetrologyToolTypes() {
+    return this.request('/settings/metrology-tool-types');
+  }
+
+  async createMetrologyToolType(data: { name: string }) {
+    return this.request('/settings/metrology-tool-types', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateMetrologyToolType(id: string, data: { name: string }) {
+    return this.request(`/settings/metrology-tool-types/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteMetrologyToolType(id: string) {
+    return this.request(`/settings/metrology-tool-types/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Cutting Tool Materials
+  async getCuttingToolMaterials() {
+    return this.request('/settings/cutting-tool-materials');
+  }
+
+  async createCuttingToolMaterial(data: { name: string }) {
+    return this.request('/settings/cutting-tool-materials', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateCuttingToolMaterial(id: string, data: { name: string }) {
+    return this.request(`/settings/cutting-tool-materials/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteCuttingToolMaterial(id: string) {
+    return this.request(`/settings/cutting-tool-materials/${id}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 // Create singleton instance
