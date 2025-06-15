@@ -182,10 +182,6 @@ The application uses a robust SQLite database with the following entities:
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
-
-For support, email support@machinatrack.com or join our [Slack channel](https://machinatrack.slack.com).
-
 ## 🗺️ Roadmap
 
 - [ ] User Authentication
