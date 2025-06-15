@@ -188,13 +188,8 @@ For support, email support@machinatrack.com or join our [Slack channel](https://
 
 ## 🗺️ Roadmap
 
-- [ ] Mobile app development
-- [ ] Advanced AI analytics
-- [ ] Integration with IoT sensors
-- [ ] Multi-tenant support
-- [ ] Advanced reporting and exports
-- [ ] Barcode/QR code scanning
-- [ ] Integration with ERP systems
+- [ ] User Authentication
+- [ ] Get to MVP (this is still a POC with some mock elements)
 
 ---
 
