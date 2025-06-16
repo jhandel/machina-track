@@ -447,6 +447,31 @@ class ApiClient {
       method: 'DELETE',
     });
   }
+
+  // Cutting Tool Types
+  async getCuttingToolTypes() {
+    return this.request('/settings/cutting-tool-types');
+  }
+
+  async createCuttingToolType(data: { name: string }) {
+    return this.request('/settings/cutting-tool-types', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateCuttingToolType(id: string, data: { name: string }) {
+    return this.request(`/settings/cutting-tool-types/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteCuttingToolType(id: string) {
+    return this.request(`/settings/cutting-tool-types/${id}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 // Create singleton instance

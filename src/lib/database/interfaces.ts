@@ -137,6 +137,13 @@ export interface CuttingToolMaterial {
   updatedAt: Date;
 }
 
+export interface CuttingToolType {
+  id: string;
+  name: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 /**
  * Settings repository interface
  */
@@ -164,6 +171,12 @@ export interface SettingsRepository {
   createCuttingToolMaterial(name: string): Promise<CuttingToolMaterial>;
   updateCuttingToolMaterial(id: string, name: string): Promise<CuttingToolMaterial>;
   deleteCuttingToolMaterial(id: string): Promise<void>;
+  
+  // Cutting Tool Types
+  getAllCuttingToolTypes(): Promise<CuttingToolType[]>;
+  createCuttingToolType(name: string): Promise<CuttingToolType>;
+  updateCuttingToolType(id: string, name: string): Promise<CuttingToolType>;
+  deleteCuttingToolType(id: string): Promise<void>;
 }
 
 /**

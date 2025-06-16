@@ -58,6 +58,19 @@ async function seedSettings() {
     }
     console.log(`✅ Created ${materials.length} cutting tool materials`);
     
+    // Seed cutting tool types
+    const cuttingTypes = ["End Mill", "Drill Bit", "Lathe Insert", "Reamer", "Tap"];
+    console.log('✂️ Seeding cutting tool types...');
+    for (const type of cuttingTypes) {
+      await prisma.cutting_tool_types.create({
+        data: {
+          id: crypto.randomUUID(),
+          name: type,
+        },
+      });
+    }
+    console.log(`✅ Created ${cuttingTypes.length} cutting tool types`);
+    
     console.log('🎉 Settings seeding completed successfully!');
     
   } catch (error) {

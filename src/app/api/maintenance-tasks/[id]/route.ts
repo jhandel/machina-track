@@ -98,8 +98,29 @@ export async function PUT(
         { status: 404 }
       );
     }
+    var scheduleNext = false;
+    if((existingTask.status != 'completed') && (validatedData.status === 'completed') && ((validatedData.frequencyDays) && (validatedData.frequencyDays > 0))) {
+      // If the task is being marked as completed, schedule the next occurrence
+      scheduleNext = true;
+    }
 
     const updatedTask = await uow.maintenanceTasks.update(id, validatedData);
+
+    if (scheduleNext) {
+      // If the task is completed, schedule the next occurrence
+      const nextDueDate = new Date();
+      nextDueDate.setDate(nextDueDate.getDate() + (validatedData.frequencyDays || 30)); // Default to 30 days if not specified
+      //clone the current task and set the next due date
+      const nextTask = {
+        ...updatedTask,
+        id: undefined, // Clear ID to create a new task
+        lastPerformedDate: validatedData.lastPerformedDate, // Set last performed date to current next
+        nextDueDate: nextDueDate.toISOString().split('T')[0], // Set next due date
+        status: z.enum(['pending', 'in_progress', 'completed', 'overdue', 'skipped']).parse('pending'), // Reset status to pending for the new task
+        partsUsed: [], // Clear parts used for the new task
+    }
+      await uow.maintenanceTasks.create(nextTask);
+    }
 
     return NextResponse.json({
       success: true,

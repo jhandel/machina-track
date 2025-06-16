@@ -1,5 +1,5 @@
 import apiClient from './api-client';
-import type { Location, Manufacturer, MetrologyToolType, CuttingToolMaterial } from '@/lib/database/interfaces';
+import type { Location, Manufacturer, MetrologyToolType, CuttingToolMaterial, CuttingToolType } from '@/lib/database/interfaces';
 
 export interface CreateLocationRequest {
   name: string;
@@ -14,6 +14,10 @@ export interface CreateMetrologyToolTypeRequest {
 }
 
 export interface CreateCuttingToolMaterialRequest {
+  name: string;
+}
+
+export interface CreateCuttingToolTypeRequest {
   name: string;
 }
 
@@ -143,6 +147,38 @@ export class SettingsService {
     const response = await apiClient.deleteCuttingToolMaterial(id);
     if (!response.success) {
       throw new Error(response.error || 'Failed to delete cutting tool material');
+    }
+  }
+
+  // Cutting Tool Types
+  static async getCuttingToolTypes(): Promise<CuttingToolType[]> {
+    const response = await apiClient.getCuttingToolTypes();
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to fetch cutting tool types');
+    }
+    return response.data as CuttingToolType[];
+  }
+
+  static async createCuttingToolType(data: CreateCuttingToolTypeRequest): Promise<CuttingToolType> {
+    const response = await apiClient.createCuttingToolType(data);
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to create cutting tool type');
+    }
+    return response.data as CuttingToolType;
+  }
+
+  static async updateCuttingToolType(id: string, data: CreateCuttingToolTypeRequest): Promise<CuttingToolType> {
+    const response = await apiClient.updateCuttingToolType(id, data);
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to update cutting tool type');
+    }
+    return response.data as CuttingToolType;
+  }
+
+  static async deleteCuttingToolType(id: string): Promise<void> {
+    const response = await apiClient.deleteCuttingToolType(id);
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to delete cutting tool type');
     }
   }
 }

@@ -1,5 +1,5 @@
 import { getPrismaClient } from '@/lib/database/prisma-client';
-import type { Location, Manufacturer, MetrologyToolType, CuttingToolMaterial, SettingsRepository } from '@/lib/database/interfaces';
+import type { Location, Manufacturer, MetrologyToolType, CuttingToolMaterial, CuttingToolType, SettingsRepository } from '@/lib/database/interfaces';
 
 export class PrismaSettingsRepository implements SettingsRepository {
   // Locations
@@ -202,6 +202,57 @@ export class PrismaSettingsRepository implements SettingsRepository {
   async deleteCuttingToolMaterial(id: string): Promise<void> {
     const prisma = await getPrismaClient();
     await prisma.cutting_tool_materials.delete({
+      where: { id },
+    });
+  }
+
+  // Cutting Tool Types
+  async getAllCuttingToolTypes(): Promise<CuttingToolType[]> {
+    const prisma = await getPrismaClient();
+    const types = await prisma.cutting_tool_types.findMany({
+      orderBy: { name: 'asc' }
+    });
+    return types.map(t => ({
+      id: t.id,
+      name: t.name,
+      createdAt: t.created_at,
+      updatedAt: t.updated_at
+    }));
+  }
+
+  async createCuttingToolType(name: string): Promise<CuttingToolType> {
+    const prisma = await getPrismaClient();
+    const type = await prisma.cutting_tool_types.create({
+      data: {
+        id: crypto.randomUUID(),
+        name,
+      },
+    });
+    return {
+      id: type.id,
+      name: type.name,
+      createdAt: type.created_at,
+      updatedAt: type.updated_at
+    };
+  }
+
+  async updateCuttingToolType(id: string, name: string): Promise<CuttingToolType> {
+    const prisma = await getPrismaClient();
+    const type = await prisma.cutting_tool_types.update({
+      where: { id },
+      data: { name, updated_at: new Date() },
+    });
+    return {
+      id: type.id,
+      name: type.name,
+      createdAt: type.created_at,
+      updatedAt: type.updated_at
+    };
+  }
+
+  async deleteCuttingToolType(id: string): Promise<void> {
+    const prisma = await getPrismaClient();
+    await prisma.cutting_tool_types.delete({
       where: { id },
     });
   }

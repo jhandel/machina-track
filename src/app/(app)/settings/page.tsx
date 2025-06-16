@@ -5,11 +5,12 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Building2, Ruler, Wrench } from 'lucide-react';
+import { MapPin, Building2, Ruler, Wrench, Scissors } from 'lucide-react';
 import { LocationsTab } from './components/LocationsTab';
 import { ManufacturersTab } from './components/ManufacturersTab';
 import { MetrologyToolTypesTab } from './components/MetrologyToolTypesTab';
 import { CuttingToolMaterialsTab } from './components/CuttingToolMaterialsTab';
+import { CuttingToolTypesTab } from './components/CuttingToolTypesTab';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('locations');
@@ -23,7 +24,7 @@ export default function SettingsPage() {
 
       <div className="grid gap-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="locations" className="flex items-center gap-2">
               <MapPin className="h-4 w-4" />
               Locations
@@ -39,6 +40,10 @@ export default function SettingsPage() {
             <TabsTrigger value="cutting-materials" className="flex items-center gap-2">
               <Wrench className="h-4 w-4" />
               Cutting Materials
+            </TabsTrigger>
+            <TabsTrigger value="cutting-types" className="flex items-center gap-2">
+              <Scissors className="h-4 w-4" />
+              Cutting Types
             </TabsTrigger>
           </TabsList>
 
@@ -106,6 +111,23 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent>
                 <CuttingToolMaterialsTab />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="cutting-types" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Scissors className="h-5 w-5" />
+                  Cutting Tool Types
+                </CardTitle>
+                <CardDescription>
+                  Define the types of cutting tools used in your machining operations.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CuttingToolTypesTab />
               </CardContent>
             </Card>
           </TabsContent>

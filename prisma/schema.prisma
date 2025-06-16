@@ -190,3 +190,10 @@ model cutting_tool_materials {
   created_at DateTime @default(now())
   updated_at DateTime @default(now())
 }
+
+model cutting_tool_types {
+  id         String   @id
+  name       String   @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+}
