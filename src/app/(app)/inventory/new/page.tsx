@@ -14,14 +14,14 @@ import { MOCK_LOCATIONS, MOCK_TOOL_TYPES_CUTTING, MOCK_MATERIALS_CUTTING } from 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { CuttingToolService } from '@/services/cutting-tool-service';
+import { ConsumableService } from '@/services/consumable-service';
 import { useState } from 'react';
 
 export default function NewInventoryItemPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const cuttingToolService = new CuttingToolService();
+  const consumableService = new ConsumableService();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -43,19 +43,19 @@ export default function NewInventoryItemPage() {
         notes: formData.get('notes') as string || undefined
       };
 
-      await cuttingToolService.create(data);
+      await consumableService.create(data);
 
       toast({
         title: "Success",
-        description: "The cutting tool has been added to inventory.",
+        description: "The Consumables has been added to inventory.",
       });
       
       router.push('/inventory');
     } catch (error) {
-      console.error('Error creating cutting tool:', error);
+      console.error('Error creating Consumables:', error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to add cutting tool. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to add Consumables. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -66,7 +66,7 @@ export default function NewInventoryItemPage() {
   return (
     <div>
       <PageHeader 
-        title="Add New Cutting Tool" 
+        title="Add New Consumables" 
         icon={Package}
         description="Add a new tool or bit to your inventory."
       />
@@ -74,7 +74,7 @@ export default function NewInventoryItemPage() {
         <Card>
           <CardHeader>
             <CardTitle>Tool Details</CardTitle>
-            <CardDescription>Fill in the information for the new cutting tool.</CardDescription>
+            <CardDescription>Fill in the information for the new Consumables.</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">

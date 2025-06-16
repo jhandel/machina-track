@@ -2,7 +2,7 @@ import type {
   Equipment, 
   MetrologyTool, 
   CalibrationLog, 
-  CuttingTool, 
+  Consumable, 
   MaintenanceTask, 
   ServiceRecord,
   MachineLogEntry,
@@ -52,15 +52,57 @@ export interface CalibrationLogRepository extends BaseRepository<CalibrationLog>
 }
 
 /**
- * Cutting tool repository interface
+ * Consumable repository interface
  */
-export interface CuttingToolRepository extends BaseRepository<CuttingTool> {
-  findLowInventory(): Promise<CuttingTool[]>;
-  findByLocation(location: string): Promise<CuttingTool[]>;
-  findByType(type: string): Promise<CuttingTool[]>;
-  findEndOfLife(date?: string): Promise<CuttingTool[]>;
-  search(query: string): Promise<CuttingTool[]>;
-  updateQuantity(id: string, quantity: number): Promise<CuttingTool | null>;
+export interface ConsumableRepository extends BaseRepository<Consumable> {
+  findLowInventory(): Promise<Consumable[]>;
+  findByLocation(location: string): Promise<Consumable[]>;
+  findByType(type: string): Promise<Consumable[]>;
+  findEndOfLife(date?: string): Promise<Consumable[]>;
+  search(query: string): Promise<Consumable[]>;
+  updateQuantity(id: string, quantity: number): Promise<Consumable | null>;
+}
+
+/**
+ * Generic repository interface for common CRUD operations
+ */
+export interface BaseRepository<T> {
+  findById(id: string): Promise<T | null>;
+  findAll(limit?: number, offset?: number): Promise<T[]>;
+  create(item: Omit<T, 'id'>): Promise<T>;
+  update(id: string, item: Partial<T>): Promise<T | null>;
+  delete(id: string): Promise<boolean>;
+  count(): Promise<number>;
+}
+
+/**
+ * Equipment repository interface
+ */
+export interface EquipmentRepository extends BaseRepository<Equipment> {
+  findByStatus(status: Equipment['status']): Promise<Equipment[]>;
+  findByLocation(location: string): Promise<Equipment[]>;
+  findBySerialNumber(serialNumber: string): Promise<Equipment | null>;
+  search(query: string): Promise<Equipment[]>;
+}
+
+/**
+ * Metrology tool repository interface
+ */
+export interface MetrologyToolRepository extends BaseRepository<MetrologyTool> {
+  findByStatus(status: MetrologyTool['status']): Promise<MetrologyTool[]>;
+  findDueForCalibration(date?: string): Promise<MetrologyTool[]>;
+  findOverdueCalibration(date?: string): Promise<MetrologyTool[]>;
+  findBySerialNumber(serialNumber: string): Promise<MetrologyTool | null>;
+  search(query: string): Promise<MetrologyTool[]>;
+}
+
+/**
+ * Calibration log repository interface
+ */
+export interface CalibrationLogRepository extends BaseRepository<CalibrationLog> {
+  findByToolId(toolId: string): Promise<CalibrationLog[]>;
+  findByDateRange(startDate: string, endDate: string): Promise<CalibrationLog[]>;
+  findByPerformer(performedBy: string): Promise<CalibrationLog[]>;
 }
 
 /**
@@ -130,14 +172,14 @@ export interface MetrologyToolType {
   updatedAt: Date;
 }
 
-export interface CuttingToolMaterial {
+export interface ConsumableMaterial {
   id: string;
   name: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface CuttingToolType {
+export interface ConsumableType {
   id: string;
   name: string;
   createdAt: Date;
@@ -166,17 +208,17 @@ export interface SettingsRepository {
   updateMetrologyToolType(id: string, name: string): Promise<MetrologyToolType>;
   deleteMetrologyToolType(id: string): Promise<void>;
   
-  // Cutting Tool Materials
-  getAllCuttingToolMaterials(): Promise<CuttingToolMaterial[]>;
-  createCuttingToolMaterial(name: string): Promise<CuttingToolMaterial>;
-  updateCuttingToolMaterial(id: string, name: string): Promise<CuttingToolMaterial>;
-  deleteCuttingToolMaterial(id: string): Promise<void>;
+  // Consumable Materials
+  getAllConsumableMaterials(): Promise<ConsumableMaterial[]>;
+  createConsumableMaterial(name: string): Promise<ConsumableMaterial>;
+  updateConsumableMaterial(id: string, name: string): Promise<ConsumableMaterial>;
+  deleteConsumableMaterial(id: string): Promise<void>;
   
-  // Cutting Tool Types
-  getAllCuttingToolTypes(): Promise<CuttingToolType[]>;
-  createCuttingToolType(name: string): Promise<CuttingToolType>;
-  updateCuttingToolType(id: string, name: string): Promise<CuttingToolType>;
-  deleteCuttingToolType(id: string): Promise<void>;
+  // Consumable Types
+  getAllConsumableTypes(): Promise<ConsumableType[]>;
+  createConsumableType(name: string): Promise<ConsumableType>;
+  updateConsumableType(id: string, name: string): Promise<ConsumableType>;
+  deleteConsumableType(id: string): Promise<void>;
 }
 
 /**
@@ -186,7 +228,7 @@ export interface UnitOfWork {
   equipment: EquipmentRepository;
   metrologyTools: MetrologyToolRepository;
   calibrationLogs: CalibrationLogRepository;
-  cuttingTools: CuttingToolRepository;
+  consumables: ConsumableRepository;
   maintenanceTasks: MaintenanceTaskRepository;
   serviceRecords: ServiceRecordRepository;
   machineLogs: MachineLogRepository;

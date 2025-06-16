@@ -9,39 +9,39 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { PlusCircle, Package, Search, MapPin, AlertTriangle, Wrench, TrendingDown } from 'lucide-react';
 import Link from 'next/link';
-import { cuttingToolService } from '@/services';
-import type { CuttingTool } from '@/lib/types';
+import { consumableService } from '@/services';
+import type { Consumable } from '@/lib/types';
 
 export default function InventoryPage() {
-  const [tools, setTools] = useState<CuttingTool[]>([]);
+  const [tools, setTools] = useState<Consumable[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'low_inventory' | 'by_location' | 'by_type'>('all');
 
   useEffect(() => {
-    loadCuttingTools();
+    loadConsumables();
   }, [filter]);
 
-  const loadCuttingTools = async () => {
+  const loadConsumables = async () => {
     try {
       setLoading(true);
       setError(null);
-      
-      let fetchedTools: CuttingTool[] = [];
-      
+
+      let fetchedTools: Consumable[] = [];
+
       switch (filter) {
         case 'low_inventory':
-          fetchedTools = await cuttingToolService.getLowInventory();
+          fetchedTools = await consumableService.getLowInventory();
           break;
         default:
-          fetchedTools = await cuttingToolService.getAll();
+          fetchedTools = await consumableService.getAll();
       }
       
       setTools(fetchedTools);
     } catch (err) {
-      console.error('Error loading cutting tools:', err);
-      setError('Failed to load cutting tool inventory. Please try again.');
+      console.error('Error loading consumables:', err);
+      setError('Failed to load consumable inventory. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -54,17 +54,17 @@ export default function InventoryPage() {
     (tool.material && tool.material.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const isLowInventory = (tool: CuttingTool) => {
+  const isLowInventory = (tool: Consumable) => {
     return tool.quantity <= tool.minQuantity;
   };
 
-  const getQuantityColor = (tool: CuttingTool) => {
+  const getQuantityColor = (tool: Consumable) => {
     if (tool.quantity <= tool.minQuantity) return 'text-red-600';
     if (tool.quantity <= tool.minQuantity * 2) return 'text-yellow-600';
     return 'text-green-600';
   };
 
-  const getToolLifeColor = (tool: CuttingTool) => {
+  const getToolLifeColor = (tool: Consumable) => {
     if (!tool.toolLifeHours || !tool.remainingToolLifeHours) return 'text-gray-600';
     const percentage = (tool.remainingToolLifeHours / tool.toolLifeHours) * 100;
     if (percentage <= 20) return 'text-red-600';
@@ -76,9 +76,9 @@ export default function InventoryPage() {
     return (
       <div>
         <PageHeader 
-          title="Cutting Tool Inventory" 
+          title="Consumables Inventory" 
           icon={Package}
-          description="Manage stock levels, types, and locations of cutting tools and bits."
+          description="Manage stock levels, types, and locations of Consumables and bits."
         />
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
@@ -91,13 +91,13 @@ export default function InventoryPage() {
   return (
     <div>
       <PageHeader 
-        title="Cutting Tool Inventory" 
+        title="Consumables Inventory" 
         icon={Package}
-        description="Manage stock levels, types, and locations of cutting tools and bits."
+        description="Manage stock levels, types, and locations of Consumables and bits."
         actions={
           <Button asChild>
             <Link href="/inventory/new">
-              <PlusCircle className="mr-2 h-4 w-4" /> Add New Tool
+              <PlusCircle className="mr-2 h-4 w-4" /> New Consumable
             </Link>
           </Button>
         }
@@ -130,7 +130,7 @@ export default function InventoryPage() {
             size="sm"
             onClick={() => setFilter('all')}
           >
-            All Tools
+            AllConsumables
           </Button>
           <Button
             variant={filter === 'low_inventory' ? 'default' : 'outline'}
@@ -148,13 +148,13 @@ export default function InventoryPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Tool Inventory
+            Inventory
             <Badge variant="secondary" className="ml-2">
               {filteredTools.length}
             </Badge>
           </CardTitle>
           <CardDescription>
-            {filter === 'all' ? 'Complete cutting tool inventory' : 
+            {filter === 'all' ? 'Complete Consumables inventory' : 
              'Tools with low inventory levels requiring restocking'}
           </CardDescription>
         </CardHeader>
@@ -241,11 +241,11 @@ export default function InventoryPage() {
             <div className="text-center py-8">
               <Package className="mx-auto h-12 w-12 text-muted-foreground/50" />
               <p className="text-muted-foreground mt-2">
-                {searchQuery ? 'No tools match your search.' : 'No cutting tools in inventory.'}
+                {searchQuery ? 'No tools match your search.' : 'No Consumables in inventory.'}
               </p>
               {!searchQuery && (
                 <Button asChild className="mt-4" variant="outline">
-                  <Link href="/inventory/new">Add Your First Tool</Link>
+                  <Link href="/inventory/new">Add Your First Consumable</Link>
                 </Button>
               )}
             </div>

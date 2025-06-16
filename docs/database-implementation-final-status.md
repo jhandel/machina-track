@@ -18,7 +18,7 @@ The MachinaTrack database layer is now **100% complete** and production-ready. A
 - **✅ Equipment Repository**: Full CRUD operations with filtering and search
 - **✅ Metrology Tools Repository**: Complete implementation with calibration tracking
 - **✅ Maintenance Tasks Repository**: Full CRUD with status and assignment management
-- **✅ Cutting Tools Repository**: Complete with inventory and location tracking
+- **✅ Consumables Repository**: Complete with inventory and location tracking
 - **✅ Calibration Logs Repository**: Full CRUD with tool relationship management
 - **✅ Service Records Repository**: Complete with task relationships and attachment support
 - **✅ Machine Logs Repository**: Full implementation with equipment relationships and filtering
@@ -28,7 +28,7 @@ The MachinaTrack database layer is now **100% complete** and production-ready. A
 - **✅ Equipment API**: `/api/equipment` & `/api/equipment/[id]` - Full CRUD with advanced filtering
 - **✅ Metrology Tools API**: `/api/metrology-tools` & `/api/metrology-tools/[id]` - Complete CRUD with individual endpoints
 - **✅ Maintenance Tasks API**: `/api/maintenance-tasks` - Full CRUD operations
-- **✅ Cutting Tools API**: `/api/cutting-tools` & `/api/cutting-tools/[id]` - Complete with inventory management
+- **✅ Consumables API**: `/api/cutting-tools` & `/api/cutting-tools/[id]` - Complete with inventory management
 - **✅ Calibration Logs API**: `/api/calibration-logs` & `/api/calibration-logs/[id]` - Full CRUD with individual endpoints
 - **✅ Service Records API**: `/api/service-records` & `/api/service-records/[id]` - Complete with filtering and relationships
 - **✅ Machine Logs API**: `/api/machine-logs` & `/api/machine-logs/[id]` - Full CRUD with equipment filtering
@@ -63,7 +63,7 @@ The MachinaTrack database layer is now **100% complete** and production-ready. A
 ### Search and Filtering Capabilities
 - **Equipment**: By status, location, type, and text search
 - **Maintenance Tasks**: By status, assignment, and due dates
-- **Cutting Tools**: By location, type, and low inventory detection
+- **Consumables**: By location, type, and low inventory detection
 - **Metrology Tools**: By status, calibration dates, and type
 - **Service Records**: By task, performer, date range, and equipment
 - **Machine Logs**: By equipment, date range, error codes, metrics, and recent activity

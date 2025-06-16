@@ -1,12 +1,11 @@
-import Database from 'better-sqlite3';
-import { getDatabase, executeTransaction } from '../connection';
+
 import type { UnitOfWork } from '../interfaces';
 
 // Import working repository implementations
 import { PrismaEquipmentRepository } from './prisma/equipment';
 import { PrismaMetrologyToolRepository } from './prisma/metrology-tools';
 import { PrismaMaintenanceTaskRepository } from './prisma/maintenance-tasks';
-import { PrismaCuttingToolRepository } from './prisma/cutting-tools';
+import { PrismaConsumableRepository } from './prisma/consumables';
 import { PrismaCalibrationLogRepository } from './prisma/calibration-logs';
 import { PrismaDashboardRepository } from './prisma/dashboard';
 import { PrismaServiceRecordRepository } from './prisma/service-records';
@@ -17,7 +16,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
   public readonly equipment: any;
   public readonly metrologyTools: any;
   public readonly calibrationLogs: any;
-  public readonly cuttingTools: any;
+  public readonly consumables: any;
   public readonly maintenanceTasks: any;
   public readonly serviceRecords: any;
   public readonly machineLogs: any;
@@ -29,7 +28,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
     this.equipment = new PrismaEquipmentRepository();
     this.metrologyTools = new PrismaMetrologyToolRepository();
     this.calibrationLogs = new PrismaCalibrationLogRepository();
-    this.cuttingTools = new PrismaCuttingToolRepository();
+    this.consumables = new PrismaConsumableRepository();
     this.maintenanceTasks = new PrismaMaintenanceTaskRepository();
     this.serviceRecords = new PrismaServiceRecordRepository();
     this.machineLogs = new PrismaMachineLogRepository();

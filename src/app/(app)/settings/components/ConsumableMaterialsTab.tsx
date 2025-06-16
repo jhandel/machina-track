@@ -12,38 +12,38 @@ import { Plus, Edit2, Trash2, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import type { CuttingToolType } from '@/lib/database/interfaces';
+import type { ConsumableMaterial } from '@/lib/database/interfaces';
 
-const toolTypeSchema = z.object({
+const materialSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
 });
 
-type ToolTypeForm = z.infer<typeof toolTypeSchema>;
+type MaterialForm = z.infer<typeof materialSchema>;
 
-export function CuttingToolTypesTab() {
-  const [toolTypes, setToolTypes] = useState<CuttingToolType[]>([]);
+export function ConsumableMaterialsTab() {
+  const [materials, setMaterials] = useState<ConsumableMaterial[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingToolType, setEditingToolType] = useState<CuttingToolType | null>(null);
+  const [editingMaterial, setEditingMaterial] = useState<ConsumableMaterial | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const form = useForm<ToolTypeForm>({
-    resolver: zodResolver(toolTypeSchema),
+  const form = useForm<MaterialForm>({
+    resolver: zodResolver(materialSchema),
     defaultValues: {
       name: '',
     },
   });
 
-  const fetchToolTypes = async () => {
+  const fetchMaterials = async () => {
     try {
       setLoading(true);
-      const data = await SettingsService.getCuttingToolTypes();
-      setToolTypes(data);
+      const data = await SettingsService.getConsumableMaterials();
+      setMaterials(data);
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to fetch cutting tool types',
+        description: 'Failed to fetch consumable materials',
         variant: 'destructive',
       });
     } finally {
@@ -52,43 +52,43 @@ export function CuttingToolTypesTab() {
   };
 
   useEffect(() => {
-    fetchToolTypes();
+    fetchMaterials();
   }, []);
 
   const handleCreate = () => {
-    setEditingToolType(null);
+    setEditingMaterial(null);
     form.reset({ name: '' });
     setDialogOpen(true);
   };
 
-  const handleEdit = (toolType: CuttingToolType) => {
-    setEditingToolType(toolType);
-    form.reset({ name: toolType.name });
+  const handleEdit = (material: ConsumableMaterial) => {
+    setEditingMaterial(material);
+    form.reset({ name: material.name });
     setDialogOpen(true);
   };
 
-  const handleSubmit = async (data: ToolTypeForm) => {
+  const handleSubmit = async (data: MaterialForm) => {
     try {
       setSubmitting(true);
-      if (editingToolType) {
-        await SettingsService.updateCuttingToolType(editingToolType.id, data);
+      if (editingMaterial) {
+        await SettingsService.updateConsumableMaterial(editingMaterial.id, data);
         toast({
           title: 'Success',
-          description: 'Cutting tool type updated successfully',
+          description: 'Consumable material updated successfully',
         });
       } else {
-        await SettingsService.createCuttingToolType(data);
+        await SettingsService.createConsumableMaterial(data);
         toast({
           title: 'Success',
-          description: 'Cutting tool type created successfully',
+          description: 'Consumable material created successfully',
         });
       }
       setDialogOpen(false);
-      fetchToolTypes();
+      fetchMaterials();
     } catch (error) {
       toast({
         title: 'Error',
-        description: editingToolType ? 'Failed to update cutting tool type' : 'Failed to create cutting tool type',
+        description: editingMaterial ? 'Failed to update consumable material' : 'Failed to create consumable material',
         variant: 'destructive',
       });
     } finally {
@@ -96,22 +96,22 @@ export function CuttingToolTypesTab() {
     }
   };
 
-  const handleDelete = async (toolType: CuttingToolType) => {
-    if (!confirm(`Are you sure you want to delete "${toolType.name}"?`)) {
+  const handleDelete = async (material: ConsumableMaterial) => {
+    if (!confirm(`Are you sure you want to delete "${material.name}"?`)) {
       return;
     }
 
     try {
-      await SettingsService.deleteCuttingToolType(toolType.id);
+      await SettingsService.deleteConsumableMaterial(material.id);
       toast({
         title: 'Success',
-        description: 'Cutting tool type deleted successfully',
+        description: 'Consumable material deleted successfully',
       });
-      fetchToolTypes();
+      fetchMaterials();
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to delete cutting tool type',
+        description: 'Failed to delete consumable material',
         variant: 'destructive',
       });
     }
@@ -119,8 +119,8 @@ export function CuttingToolTypesTab() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex items-center justify-center h-32">
+        <Loader2 className="h-6 w-6 animate-spin" />
       </div>
     );
   }
@@ -129,14 +129,14 @@ export function CuttingToolTypesTab() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-lg font-medium">Cutting Tool Types</h3>
+          <h3 className="text-lg font-medium">Consumable Materials ({materials.length})</h3>
           <p className="text-sm text-muted-foreground">
-            Manage the types of cutting tools in your inventory.
+            Manage materials that consumables are made from
           </p>
         </div>
-        <Button onClick={handleCreate} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Add Type
+        <Button onClick={handleCreate}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Material
         </Button>
       </div>
 
@@ -150,32 +150,32 @@ export function CuttingToolTypesTab() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {toolTypes.length === 0 ? (
+            {materials.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center text-muted-foreground">
-                  No cutting tool types found. Add one to get started.
+                <TableCell colSpan={3} className="text-center py-6 text-muted-foreground">
+                  No consumable materials found. Add your first material to get started.
                 </TableCell>
               </TableRow>
             ) : (
-              toolTypes.map((toolType) => (
-                <TableRow key={toolType.id}>
-                  <TableCell className="font-medium">{toolType.name}</TableCell>
+              materials.map((material) => (
+                <TableRow key={material.id}>
+                  <TableCell className="font-medium">{material.name}</TableCell>
                   <TableCell>
-                    {new Date(toolType.createdAt).toLocaleDateString()}
+                    {new Date(material.createdAt).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleEdit(toolType)}
+                        onClick={() => handleEdit(material)}
                       >
                         <Edit2 className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDelete(toolType)}
+                        onClick={() => handleDelete(material)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -192,14 +192,16 @@ export function CuttingToolTypesTab() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingToolType ? 'Edit Cutting Tool Type' : 'Add Cutting Tool Type'}
+              {editingMaterial ? 'Edit Consumable Material' : 'Add Consumable Material'}
             </DialogTitle>
             <DialogDescription>
-              {editingToolType
-                ? 'Update the cutting tool type details below.'
-                : 'Add a new cutting tool type to your system.'}
+              {editingMaterial 
+                ? 'Update the consumable material information.'
+                : 'Add a new consumable material to your system.'
+              }
             </DialogDescription>
           </DialogHeader>
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
               <FormField
@@ -209,15 +211,13 @@ export function CuttingToolTypesTab() {
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Enter cutting tool type name"
-                        {...field}
-                      />
+                      <Input placeholder="Enter material name" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
               <DialogFooter>
                 <Button
                   type="button"
@@ -228,7 +228,7 @@ export function CuttingToolTypesTab() {
                 </Button>
                 <Button type="submit" disabled={submitting}>
                   {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {editingToolType ? 'Update' : 'Create'}
+                  {editingMaterial ? 'Update' : 'Create'}
                 </Button>
               </DialogFooter>
             </form>

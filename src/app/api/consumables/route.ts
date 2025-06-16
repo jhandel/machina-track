@@ -4,7 +4,7 @@ import { DatabaseError, NotFoundError, ValidationError } from '@/lib/database/in
 import { z } from 'zod';
 
 // Validation schema for cutting tools
-const CuttingToolSchema = z.object({
+const ConsumableSchema = z.object({
   name: z.string().min(1),
   type: z.string().min(1),
   material: z.string().optional(),
@@ -40,20 +40,20 @@ export async function GET(request: NextRequest) {
     let tools;
 
     if (lowInventory) {
-      tools = await uow.cuttingTools.findLowInventory();
+      tools = await uow.consumables.findLowInventory();
     } else if (location) {
-      tools = await uow.cuttingTools.findByLocation(location);
+      tools = await uow.consumables.findByLocation(location);
     } else if (type) {
-      tools = await uow.cuttingTools.findByType(type);
+      tools = await uow.consumables.findByType(type);
     } else if (endOfLife) {
-      tools = await uow.cuttingTools.findEndOfLife(endOfLife);
+      tools = await uow.consumables.findEndOfLife(endOfLife);
     } else if (search) {
-      tools = await uow.cuttingTools.search(search);
+      tools = await uow.consumables.search(search);
     } else {
-      tools = await uow.cuttingTools.findAll(limit, offset);
+      tools = await uow.consumables.findAll(limit, offset);
     }
 
-    const total = await uow.cuttingTools.count();
+    const total = await uow.consumables.count();
 
     return NextResponse.json({
       success: true,
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // Validate input
-    const validationResult = CuttingToolSchema.safeParse(body);
+    const validationResult = ConsumableSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
         { 
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
     }
 
     const uow = getUnitOfWork();
-    const tool = await uow.cuttingTools.create(validationResult.data);
+    const tool = await uow.consumables.create(validationResult.data);
 
     return NextResponse.json({
       success: true,

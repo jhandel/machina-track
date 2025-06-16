@@ -1,41 +1,38 @@
 import { v4 as uuidv4 } from 'uuid';
-import type { CuttingTool } from '@/lib/types';
-import type { CuttingToolRepository } from '../../interfaces';
+import type { Consumable } from '@/lib/types';
+import type { ConsumableRepository } from '../../interfaces';
 import { DatabaseError, NotFoundError } from '../../interfaces';
 import { getPrismaClient } from '../../prisma-client';
 
-export class PrismaCuttingToolRepository implements CuttingToolRepository {
-  async findById(id: string): Promise<CuttingTool | null> {
-      const prisma = await getPrismaClient();
+export class PrismaConsumableRepository implements ConsumableRepository {
+  async findById(id: string): Promise<Consumable | null> {
     try {
       const prisma = await getPrismaClient();
-      const tool = await prisma.cutting_tools.findUnique({ where: { id } });
-      return tool ? this.mapToCuttingTool(tool) : null;
+      const tool = await prisma.consumables.findUnique({ where: { id } });
+      return tool ? this.mapToConsumable(tool) : null;
     } catch (error) {
-      throw new DatabaseError(`Failed to find cutting tool by id: ${error}`);
+      throw new DatabaseError(`Failed to find consumable by id: ${error}`);
     }
   }
 
-  async findAll(limit: number = 100, offset: number = 0): Promise<CuttingTool[]> {
-      const prisma = await getPrismaClient();
+  async findAll(limit: number = 100, offset: number = 0): Promise<Consumable[]> {
     try {
       const prisma = await getPrismaClient();
-      const tools = await prisma.cutting_tools.findMany({
+      const tools = await prisma.consumables.findMany({
         skip: offset,
         take: limit,
         orderBy: { updated_at: 'desc' },
       });
-      return tools.map(this.mapToCuttingTool);
+      return tools.map(this.mapToConsumable);
     } catch (error) {
-      throw new DatabaseError(`Failed to find all cutting tools: ${error}`);
+      throw new DatabaseError(`Failed to find all consumables: ${error}`);
     }
   }
 
-  async create(item: Omit<CuttingTool, 'id'>): Promise<CuttingTool> {
-      const prisma = await getPrismaClient();
+  async create(item: Omit<Consumable, 'id'>): Promise<Consumable> {
     try {
       const prisma = await getPrismaClient();
-      const created = await prisma.cutting_tools.create({
+      const created = await prisma.consumables.create({
         data: {
           id: uuidv4(),
           name: item.name,
@@ -55,16 +52,16 @@ export class PrismaCuttingToolRepository implements CuttingToolRepository {
           notes: item.notes ?? null,
         },
       });
-      return this.mapToCuttingTool(created);
+      return this.mapToConsumable(created);
     } catch (error: any) {
-      throw new DatabaseError(`Failed to create cutting tool: ${error.message}`);
+      throw new DatabaseError(`Failed to create Consumables: ${error.message}`);
     }
   }
 
-  async update(id: string, item: Partial<CuttingTool>): Promise<CuttingTool | null> {
+  async update(id: string, item: Partial<Consumable>): Promise<Consumable | null> {
       const prisma = await getPrismaClient();
     try {
-      const updated = await prisma.cutting_tools.update({
+      const updated = await prisma.consumables.update({
         where: { id },
         data: {
           name: item.name,
@@ -84,54 +81,54 @@ export class PrismaCuttingToolRepository implements CuttingToolRepository {
           notes: item.notes,
         },
       });
-      return this.mapToCuttingTool(updated);
+      return this.mapToConsumable(updated);
     } catch (error: any) {
       if (error.code === 'P2025') {
         return null;
       }
-      throw new DatabaseError(`Failed to update cutting tool: ${error.message}`);
+      throw new DatabaseError(`Failed to update Consumables: ${error.message}`);
     }
   }
 
   async delete(id: string): Promise<boolean> {
       const prisma = await getPrismaClient();
     try {
-      await prisma.cutting_tools.delete({ where: { id } });
+      await prisma.consumables.delete({ where: { id } });
       return true;
     } catch (error: any) {
       if (error.code === 'P2025') {
         return false;
       }
-      throw new DatabaseError(`Failed to delete cutting tool: ${error}`);
+      throw new DatabaseError(`Failed to delete Consumables: ${error}`);
     }
   }
 
   async count(): Promise<number> {
       const prisma = await getPrismaClient();
     try {
-      return await prisma.cutting_tools.count();
+      return await prisma.consumables.count();
     } catch (error) {
-      throw new DatabaseError(`Failed to count cutting tools: ${error}`);
+      throw new DatabaseError(`Failed to count Consumables: ${error}`);
     }
   }
 
-  async findByLocation(location: string): Promise<CuttingTool[]> {
+  async findByLocation(location: string): Promise<Consumable[]> {
       const prisma = await getPrismaClient();
     try {
-      const tools = await prisma.cutting_tools.findMany({
+      const tools = await prisma.consumables.findMany({
         where: { location },
         orderBy: { name: 'asc' },
       });
-      return tools.map(this.mapToCuttingTool);
+      return tools.map(this.mapToConsumable);
     } catch (error) {
-      throw new DatabaseError(`Failed to find cutting tools by location: ${error}`);
+      throw new DatabaseError(`Failed to find Consumables by location: ${error}`);
     }
   }
 
-  async search(query: string): Promise<CuttingTool[]> {
+  async search(query: string): Promise<Consumable[]> {
       const prisma = await getPrismaClient();
     try {
-      const tools = await prisma.cutting_tools.findMany({
+      const tools = await prisma.consumables.findMany({
         where: {
           OR: [
             { name: { contains: query } },
@@ -145,76 +142,76 @@ export class PrismaCuttingToolRepository implements CuttingToolRepository {
         },
         orderBy: { name: 'asc' },
       });
-      return tools.map(this.mapToCuttingTool);
+      return tools.map(this.mapToConsumable);
     } catch (error) {
-      throw new DatabaseError(`Failed to search cutting tools: ${error}`);
+      throw new DatabaseError(`Failed to search Consumables: ${error}`);
     }
   }
 
-  async findLowInventory(): Promise<CuttingTool[]> {
+  async findLowInventory(): Promise<Consumable[]> {
       const prisma = await getPrismaClient();
     try {
-      const tools = await prisma.cutting_tools.findMany({
+      const tools = await prisma.consumables.findMany({
         where: {
-          quantity: { lte: 5 },
+          quantity: { lte: prisma.consumables.fields.min_quantity },
         },
         orderBy: [
           { quantity: 'asc' },
           { name: 'asc' },
         ],
       });
-      return tools.map(this.mapToCuttingTool);
+      return tools.map(this.mapToConsumable);
     } catch (error) {
       throw new DatabaseError(`Failed to find low inventory tools: ${error}`);
     }
   }
 
-  async findByType(type: string): Promise<CuttingTool[]> {
+  async findByType(type: string): Promise<Consumable[]> {
       const prisma = await getPrismaClient();
     try {
-      const tools = await prisma.cutting_tools.findMany({
+      const tools = await prisma.consumables.findMany({
         where: { type },
         orderBy: { name: 'asc' },
       });
-      return tools.map(this.mapToCuttingTool);
+      return tools.map(this.mapToConsumable);
     } catch (error) {
-      throw new DatabaseError(`Failed to find cutting tools by type: ${error}`);
+      throw new DatabaseError(`Failed to find consumables by type: ${error}`);
     }
   }
 
-  async findEndOfLife(date?: string): Promise<CuttingTool[]> {
+  async findEndOfLife(date?: string): Promise<Consumable[]> {
       const prisma = await getPrismaClient();
     try {
       const checkDate = date || new Date().toISOString().split('T')[0];
-      const tools = await prisma.cutting_tools.findMany({
+      const tools = await prisma.consumables.findMany({
         where: {
           end_of_life_date: { lte: checkDate },
         },
         orderBy: { end_of_life_date: 'asc' },
       });
-      return tools.map(this.mapToCuttingTool);
+      return tools.map(this.mapToConsumable);
     } catch (error) {
       throw new DatabaseError(`Failed to find end of life tools: ${error}`);
     }
   }
 
-  async updateQuantity(id: string, quantity: number): Promise<CuttingTool | null> {
+  async updateQuantity(id: string, quantity: number): Promise<Consumable | null> {
       const prisma = await getPrismaClient();
     try {
-      const updated = await prisma.cutting_tools.update({
+      const updated = await prisma.consumables.update({
         where: { id },
         data: { quantity },
       });
-      return this.mapToCuttingTool(updated);
+      return this.mapToConsumable(updated);
     } catch (error: any) {
       if (error.code === 'P2025') {
         return null;
       }
-      throw new DatabaseError(`Failed to update cutting tool quantity: ${error}`);
+      throw new DatabaseError(`Failed to update Consumables quantity: ${error}`);
     }
   }
 
-  private mapToCuttingTool(row: any): CuttingTool {
+  private mapToConsumable(row: any): Consumable {
     return {
       id: row.id,
       name: row.name,

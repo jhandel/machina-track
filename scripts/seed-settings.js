@@ -45,31 +45,31 @@ async function seedSettings() {
     }
     console.log(`✅ Created ${metrologyTypes.length} metrology tool types`);
     
-    // Seed cutting tool materials
+    // Seed consumable materials
     const materials = ["HSS", "Carbide", "Cobalt", "PCD"];
-    console.log('🔧 Seeding cutting tool materials...');
+    console.log('🔧 Seeding consumable materials...');
     for (const material of materials) {
-      await prisma.cutting_tool_materials.create({
+      await prisma.consumable_materials.create({
         data: {
           id: crypto.randomUUID(),
           name: material,
         },
       });
     }
-    console.log(`✅ Created ${materials.length} cutting tool materials`);
+    console.log(`✅ Created ${materials.length} consumable materials`);
     
-    // Seed cutting tool types
-    const cuttingTypes = ["End Mill", "Drill Bit", "Lathe Insert", "Reamer", "Tap"];
-    console.log('✂️ Seeding cutting tool types...');
-    for (const type of cuttingTypes) {
-      await prisma.cutting_tool_types.create({
+    // Seed consumable types
+    const consumableTypes = ["End Mill", "Drill Bit", "Lathe Insert", "Reamer", "Tap"];
+    console.log('✂️ Seeding consumable types...');
+    for (const type of consumableTypes) {
+      await prisma.consumable_types.create({
         data: {
           id: crypto.randomUUID(),
           name: type,
         },
       });
     }
-    console.log(`✅ Created ${cuttingTypes.length} cutting tool types`);
+    console.log(`✅ Created ${consumableTypes.length} consumable types`);
     
     console.log('🎉 Settings seeding completed successfully!');
     

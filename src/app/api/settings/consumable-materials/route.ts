@@ -9,15 +9,15 @@ const materialSchema = z.object({
 export async function GET() {
   try {
     const uow = getUnitOfWork();
-    const materials = await uow.settings.getAllCuttingToolMaterials();
+    const materials = await uow.settings.getAllConsumableMaterials();
     return NextResponse.json({
       success: true,
       data: materials,
     });
   } catch (error) {
-    console.error('Error fetching cutting tool materials:', error);
+    console.error('Error fetching Consumables materials:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch cutting tool materials' },
+      { error: 'Failed to fetch Consumables materials' },
       { status: 500 }
     );
   }
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     const { name } = materialSchema.parse(body);
 
     const uow = getUnitOfWork();
-    const material = await uow.settings.createCuttingToolMaterial(name);
+    const material = await uow.settings.createConsumableMaterial(name);
 
     return NextResponse.json({
       success: true,
@@ -43,9 +43,9 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    console.error('Error creating cutting tool material:', error);
+    console.error('Error creating Consumables material:', error);
     return NextResponse.json(
-      { error: 'Failed to create cutting tool material' },
+      { error: 'Failed to create Consumables material' },
       { status: 500 }
     );
   }

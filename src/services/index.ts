@@ -20,8 +20,8 @@ export type { DashboardData } from './dashboard-service';
 // Metrology Service
 export { MetrologyService, metrologyService } from './metrology-service';
 
-// Cutting Tool Service
-export { CuttingToolService, cuttingToolService } from './cutting-tool-service';
+// Consumable Service
+export { ConsumableService, consumableService } from './consumable-service';
 
 // Service Record Service
 export { ServiceRecordService } from './service-record-service';
@@ -34,7 +34,7 @@ export type {
   Equipment, 
   MetrologyTool, 
   CalibrationLog, 
-  CuttingTool, 
+  Consumable, 
   MaintenanceTask, 
   ServiceRecord,
   MachineLogEntry,
@@ -47,5 +47,6 @@ export type {
   CreateLocationRequest,
   CreateManufacturerRequest,
   CreateMetrologyToolTypeRequest,
-  CreateCuttingToolMaterialRequest
+  CreateConsumableMaterialRequest,
+  CreateConsumableTypeRequest
 } from './settings-service';

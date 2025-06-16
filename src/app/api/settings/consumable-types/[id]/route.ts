@@ -18,29 +18,29 @@ export async function PUT(
     const { id } = params;
 
     const uow = getUnitOfWork();
-    const cuttingToolType = await uow.settings.updateCuttingToolType(id, name);
+    const cuttingToolType = await uow.settings.updateConsumableType(id, name);
 
     return NextResponse.json({
       success: true,
       data: cuttingToolType
     });
   } catch (error) {
-    console.error('Error updating cutting tool type:', error);
+    console.error('Error updating Consumables type:', error);
     if (error instanceof Error && error.message.includes('Unique constraint')) {
       return NextResponse.json({ 
         success: false,
-        error: 'A cutting tool type with this name already exists' 
+        error: 'A Consumables type with this name already exists' 
       }, { status: 409 });
     }
     if (error instanceof Error && error.message.includes('Record to update not found')) {
       return NextResponse.json({ 
         success: false,
-        error: 'Cutting tool type not found' 
+        error: 'Consumables type not found' 
       }, { status: 404 });
     }
     return NextResponse.json({ 
       success: false,
-      error: 'Failed to update cutting tool type' 
+      error: 'Failed to update Consumables type' 
     }, { status: 500 });
   }
 }
@@ -53,23 +53,23 @@ export async function DELETE(
     const { id } = params;
 
     const uow = getUnitOfWork();
-    await uow.settings.deleteCuttingToolType(id);
+    await uow.settings.deleteConsumableType(id);
 
     return NextResponse.json({ 
       success: true,
-      message: 'Cutting tool type deleted successfully' 
+      message: 'Consumables type deleted successfully' 
     });
   } catch (error) {
-    console.error('Error deleting cutting tool type:', error);
+    console.error('Error deleting Consumables type:', error);
     if (error instanceof Error && error.message.includes('Record to delete does not exist')) {
       return NextResponse.json({ 
         success: false,
-        error: 'Cutting tool type not found' 
+        error: 'Consumables type not found' 
       }, { status: 404 });
     }
     return NextResponse.json({ 
       success: false,
-      error: 'Failed to delete cutting tool type' 
+      error: 'Failed to delete Consumables type' 
     }, { status: 500 });
   }
 }

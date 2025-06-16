@@ -13,17 +13,17 @@ const cuttingToolTypeSchema = z.object({
 export async function GET() {
   try {
     const uow = getUnitOfWork();
-    const cuttingToolTypes = await uow.settings.getAllCuttingToolTypes();
+    const cuttingToolTypes = await uow.settings.getAllConsumableTypes();
 
     return NextResponse.json({
       success: true,
       data: cuttingToolTypes,
     });
   } catch (error) {
-    console.error('Error fetching cutting tool types:', error);
+    console.error('Error fetching Consumables types:', error);
     return NextResponse.json({ 
       success: false,
-      error: 'Failed to fetch cutting tool types' 
+      error: 'Failed to fetch Consumables types' 
     }, { status: 500 });
   }
 }
@@ -38,23 +38,23 @@ export async function POST(request: NextRequest) {
     }
 
     const uow = getUnitOfWork();
-    const cuttingToolType = await uow.settings.createCuttingToolType(name);
+    const cuttingToolType = await uow.settings.createConsumableType(name);
 
     return NextResponse.json({
       success: true,
       data: cuttingToolType
     }, { status: 201 });
   } catch (error) {
-    console.error('Error creating cutting tool type:', error);
+    console.error('Error creating Consumables type:', error);
     if (error instanceof Error && error.message.includes('Unique constraint')) {
       return NextResponse.json({ 
         success: false,
-        error: 'A cutting tool type with this name already exists' 
+        error: 'A Consumables type with this name already exists' 
       }, { status: 409 });
     }
     return NextResponse.json({ 
       success: false,
-      error: 'Failed to create cutting tool type' 
+      error: 'Failed to create Consumables type' 
     }, { status: 500 });
   }
 }

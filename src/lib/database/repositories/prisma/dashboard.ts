@@ -23,9 +23,9 @@ export class PrismaDashboardRepository implements DashboardRepository {
       });
 
       // Low inventory count
-      const lowInventoryCount = await prisma.cutting_tools.count({
+      const lowInventoryCount = await prisma.consumables.count({
         where: {
-          quantity: { lte: 5 }, // Using a static value instead of prisma.cutting_tools.fields.min_quantity
+          quantity: { lte: prisma.consumables.fields.min_quantity },
         },
       });
 

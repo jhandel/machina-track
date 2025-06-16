@@ -16,7 +16,7 @@ export async function PUT(
     const { id } = params;
 
     const uow = getUnitOfWork();
-    const material = await uow.settings.updateCuttingToolMaterial(id, name);
+    const material = await uow.settings.updateConsumableMaterial(id, name);
 
     return NextResponse.json({
       success: true,
@@ -30,9 +30,9 @@ export async function PUT(
       );
     }
     
-    console.error('Error updating cutting tool material:', error);
+    console.error('Error updating Consumables material:', error);
     return NextResponse.json(
-      { error: 'Failed to update cutting tool material' },
+      { error: 'Failed to update Consumables material' },
       { status: 500 }
     );
   }
@@ -46,13 +46,13 @@ export async function DELETE(
     const { id } = params;
 
     const uow = getUnitOfWork();
-    await uow.settings.deleteCuttingToolMaterial(id);
+    await uow.settings.deleteConsumableMaterial(id);
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting cutting tool material:', error);
+    console.error('Error deleting Consumables material:', error);
     return NextResponse.json(
-      { error: 'Failed to delete cutting tool material' },
+      { error: 'Failed to delete Consumables material' },
       { status: 500 }
     );
   }

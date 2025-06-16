@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import type { CuttingTool } from '@/lib/types';
+import type { Consumable } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -25,7 +25,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
-import { CuttingToolService } from '@/services/cutting-tool-service';
+import { ConsumableService } from '@/services/consumable-service';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function InventoryItemDetailPage() {
@@ -34,7 +34,7 @@ export default function InventoryItemDetailPage() {
   const { toast } = useToast();
   const itemId = typeof params.id === 'string' ? params.id : '';
   
-  const [tool, setTool] = useState<CuttingTool | undefined>(undefined);
+  const [tool, setTool] = useState<Consumable | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,8 +48,8 @@ export default function InventoryItemDetailPage() {
 
       try {
         setLoading(true);
-        const cuttingToolService = new CuttingToolService();
-        const toolData = await cuttingToolService.getById(itemId);
+        const consumableService = new ConsumableService();
+        const toolData = await consumableService.getById(itemId);
         if (toolData) {
           setTool(toolData);
         } else {
@@ -107,7 +107,7 @@ export default function InventoryItemDetailPage() {
         <PageHeader title="Tool Not Found" icon={Package} />
         <Card>
           <CardContent className="pt-6">
-            <p>{error || 'The requested cutting tool could not be found in inventory.'}</p>
+            <p>{error || 'The requested Consumables could not be found in inventory.'}</p>
             <Button asChild className="mt-4">
               <Link href="/inventory">Back to Inventory</Link>
             </Button>
@@ -119,8 +119,8 @@ export default function InventoryItemDetailPage() {
   
   const handleDelete = async () => {
     try {
-      const cuttingToolService = new CuttingToolService();
-      await cuttingToolService.delete(tool.id);
+      const consumableService = new ConsumableService();
+      await consumableService.delete(tool.id);
       toast({
         title: "Tool Deleted",
         description: `${tool.name} has been removed from inventory.`,
@@ -238,7 +238,7 @@ export default function InventoryItemDetailPage() {
                 width={400} 
                 height={400} 
                 className="rounded-md object-cover aspect-square w-full"
-                data-ai-hint="cutting tool"
+                data-ai-hint="Consumables"
               />
             </CardContent>
           </Card>

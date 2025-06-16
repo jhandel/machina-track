@@ -25,7 +25,7 @@ A comprehensive manufacturing and production management system built with Next.j
 - **Compliance Logging**: Certificate management and audit trails
 - **Status Tracking**: Active, expired, and out-of-service tool monitoring
 
-### 🔨 Cutting Tool Inventory
+### 🔨 Consumables Inventory
 - **Inventory Management**: Track quantities, types, and locations
 - **Tool Life Tracking**: Monitor remaining tool life and usage patterns
 - **Automated Alerts**: Low stock and end-of-life notifications
@@ -164,7 +164,7 @@ The application uses a robust SQLite database with the following entities:
 
 - **Equipment** - Manufacturing machines and devices
 - **Metrology Tools** - Measurement and calibration instruments
-- **Cutting Tools** - Cutting implements inventory
+- **Consumables** - Track consumables like CNC Tools, Laser Tips, Coolant, what ever
 - **Maintenance Tasks** - Scheduled maintenance activities
 - **Service Records** - Historical maintenance records
 - **Machine Log Entries** - Equipment performance logs

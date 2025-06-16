@@ -308,8 +308,8 @@ class ApiClient {
     });
   }
 
-  // Cutting Tools API methods  
-  async getCuttingTools(filters: {
+  // Consumables API methods  
+  async getConsumables(filters: {
     location?: string;
     type?: string;
     material?: string;
@@ -319,29 +319,29 @@ class ApiClient {
     offset?: number;
   } = {}) {
     const queryString = this.buildQueryString(filters);
-    return this.request(`/cutting-tools${queryString}`);
+    return this.request(`/consumables${queryString}`);
   }
 
-  async getCuttingToolById(id: string) {
-    return this.request(`/cutting-tools/${id}`);
+  async getConsumableById(id: string) {
+    return this.request(`/consumables/${id}`);
   }
 
-  async createCuttingTool(tool: any) {
-    return this.request('/cutting-tools', {
+  async createConsumable(tool: any) {
+    return this.request('/consumables', {
       method: 'POST',
       body: JSON.stringify(tool),
     });
   }
 
-  async updateCuttingTool(id: string, tool: any) {
-    return this.request(`/cutting-tools/${id}`, {
+  async updateConsumable(id: string, tool: any) {
+    return this.request(`/consumables/${id}`, {
       method: 'PUT',
       body: JSON.stringify(tool),
     });
   }
 
-  async deleteCuttingTool(id: string) {
-    return this.request(`/cutting-tools/${id}`, {
+  async deleteConsumable(id: string) {
+    return this.request(`/consumables/${id}`, {
       method: 'DELETE',
     });
   }
@@ -423,52 +423,52 @@ class ApiClient {
     });
   }
 
-  // Cutting Tool Materials
-  async getCuttingToolMaterials() {
-    return this.request('/settings/cutting-tool-materials');
+  // Consumable Materials
+  async getConsumableMaterials() {
+    return this.request('/settings/consumable-materials');
   }
 
-  async createCuttingToolMaterial(data: { name: string }) {
-    return this.request('/settings/cutting-tool-materials', {
+  async createConsumableMaterial(data: { name: string }) {
+    return this.request('/settings/consumable-materials', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  async updateCuttingToolMaterial(id: string, data: { name: string }) {
-    return this.request(`/settings/cutting-tool-materials/${id}`, {
+  async updateConsumableMaterial(id: string, data: { name: string }) {
+    return this.request(`/settings/consumable-materials/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   }
 
-  async deleteCuttingToolMaterial(id: string) {
-    return this.request(`/settings/cutting-tool-materials/${id}`, {
+  async deleteConsumableMaterial(id: string) {
+    return this.request(`/settings/consumable-materials/${id}`, {
       method: 'DELETE',
     });
   }
 
-  // Cutting Tool Types
-  async getCuttingToolTypes() {
-    return this.request('/settings/cutting-tool-types');
+  // Consumable Types
+  async getConsumableTypes() {
+    return this.request('/settings/consumable-types');
   }
 
-  async createCuttingToolType(data: { name: string }) {
-    return this.request('/settings/cutting-tool-types', {
+  async createConsumableType(data: { name: string }) {
+    return this.request('/settings/consumable-types', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  async updateCuttingToolType(id: string, data: { name: string }) {
-    return this.request(`/settings/cutting-tool-types/${id}`, {
+  async updateConsumableType(id: string, data: { name: string }) {
+    return this.request(`/settings/consumable-types/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   }
 
-  async deleteCuttingToolType(id: string) {
-    return this.request(`/settings/cutting-tool-types/${id}`, {
+  async deleteConsumableType(id: string) {
+    return this.request(`/settings/consumable-types/${id}`, {
       method: 'DELETE',
     });
   }

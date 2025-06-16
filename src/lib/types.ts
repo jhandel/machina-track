@@ -39,7 +39,7 @@ export interface CalibrationLog {
   nextDueDate?: string; // ISO date string
 }
 
-export interface CuttingTool {
+export interface Consumable {
   id: string;
   name: string; 
   type: string; 

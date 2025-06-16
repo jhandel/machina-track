@@ -4,7 +4,7 @@ import { DatabaseError, NotFoundError, ValidationError } from '@/lib/database/in
 import { z } from 'zod';
 
 // Partial schema for updates
-const CuttingToolUpdateSchema = z.object({
+const ConsumableUpdateSchema = z.object({
   name: z.string().min(1).optional(),
   type: z.string().min(1).optional(),
   material: z.string().optional(),
@@ -23,7 +23,7 @@ const CuttingToolUpdateSchema = z.object({
 });
 
 /**
- * GET /api/cutting-tools/[id] - Get a specific cutting tool
+ * GET /api/consumables/[id] - Get a specific consumable
  */
 export async function GET(
   request: NextRequest,
@@ -32,11 +32,11 @@ export async function GET(
   try {
     const { id } = await params;
     const uow = getUnitOfWork();
-    const tool = await uow.cuttingTools.findById(id);
+    const tool = await uow.consumables.findById(id);
 
     if (!tool) {
       return NextResponse.json(
-        { success: false, error: 'Cutting tool not found' },
+        { success: false, error: 'Consumable not found' },
         { status: 404 }
       );
     }
@@ -46,7 +46,7 @@ export async function GET(
       data: tool
     });
   } catch (error) {
-    console.error(`GET /api/cutting-tools/[id] error:`, error);
+    console.error(`GET /api/consumables/[id] error:`, error);
     
     if (error instanceof NotFoundError) {
       return NextResponse.json(
@@ -70,7 +70,7 @@ export async function GET(
 }
 
 /**
- * PUT /api/cutting-tools/[id] - Update a cutting tool
+ * PUT /api/consumables/[id] - Update a consumable
  */
 export async function PUT(
   request: NextRequest,
@@ -80,7 +80,7 @@ export async function PUT(
     const body = await request.json();
     
     // Validate input
-    const validationResult = CuttingToolUpdateSchema.safeParse(body);
+    const validationResult = ConsumableUpdateSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
         { 
@@ -93,11 +93,11 @@ export async function PUT(
     }
 
     const uow = getUnitOfWork();
-    const updatedTool = await uow.cuttingTools.update(params.id, validationResult.data);
+    const updatedTool = await uow.consumables.update(params.id, validationResult.data);
 
     if (!updatedTool) {
       return NextResponse.json(
-        { success: false, error: 'Cutting tool not found' },
+        { success: false, error: 'Consumables not found' },
         { status: 404 }
       );
     }
@@ -107,7 +107,7 @@ export async function PUT(
       data: updatedTool
     });
   } catch (error) {
-    console.error(`PUT /api/cutting-tools/${params.id} error:`, error);
+    console.error(`PUT /api/consumables/${params.id} error:`, error);
     
     if (error instanceof ValidationError) {
       return NextResponse.json(
@@ -138,7 +138,7 @@ export async function PUT(
 }
 
 /**
- * DELETE /api/cutting-tools/[id] - Delete a cutting tool
+ * DELETE /api/consumables/[id] - Delete a consumable
  */
 export async function DELETE(
   request: NextRequest,
@@ -146,21 +146,21 @@ export async function DELETE(
 ) {
   try {
     const uow = getUnitOfWork();
-    const deleted = await uow.cuttingTools.delete(params.id);
+    const deleted = await uow.consumables.delete(params.id);
 
     if (!deleted) {
       return NextResponse.json(
-        { success: false, error: 'Cutting tool not found' },
+        { success: false, error: 'Consumables not found' },
         { status: 404 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Cutting tool deleted successfully'
+      message: 'Consumables deleted successfully'
     });
   } catch (error) {
-    console.error(`DELETE /api/cutting-tools/${params.id} error:`, error);
+    console.error(`DELETE /api/consumables/${params.id} error:`, error);
     
     if (error instanceof NotFoundError) {
       return NextResponse.json(
@@ -184,7 +184,7 @@ export async function DELETE(
 }
 
 /**
- * PATCH /api/cutting-tools/[id] - Update cutting tool quantity
+ * PATCH /api/consumables/[id] - Update consumable quantity
  */
 export async function PATCH(
   request: NextRequest,
@@ -201,11 +201,11 @@ export async function PATCH(
     }
 
     const uow = getUnitOfWork();
-    const updatedTool = await uow.cuttingTools.updateQuantity(params.id, body.quantity);
+    const updatedTool = await uow.consumables.updateQuantity(params.id, body.quantity);
 
     if (!updatedTool) {
       return NextResponse.json(
-        { success: false, error: 'Cutting tool not found' },
+        { success: false, error: 'Consumables not found' },
         { status: 404 }
       );
     }
@@ -215,7 +215,7 @@ export async function PATCH(
       data: updatedTool
     });
   } catch (error) {
-    console.error(`PATCH /api/cutting-tools/${params.id} error:`, error);
+    console.error(`PATCH /api/consumables/${params.id} error:`, error);
     
     if (error instanceof DatabaseError) {
       return NextResponse.json(

@@ -1,5 +1,5 @@
 import apiClient from './api-client';
-import type { Location, Manufacturer, MetrologyToolType, CuttingToolMaterial, CuttingToolType } from '@/lib/database/interfaces';
+import type { Location, Manufacturer, MetrologyToolType, ConsumableMaterial, ConsumableType } from '@/lib/database/interfaces';
 
 export interface CreateLocationRequest {
   name: string;
@@ -13,11 +13,11 @@ export interface CreateMetrologyToolTypeRequest {
   name: string;
 }
 
-export interface CreateCuttingToolMaterialRequest {
+export interface CreateConsumableMaterialRequest {
   name: string;
 }
 
-export interface CreateCuttingToolTypeRequest {
+export interface CreateConsumableTypeRequest {
   name: string;
 }
 
@@ -118,67 +118,67 @@ export class SettingsService {
     }
   }
 
-  // Cutting Tool Materials
-  static async getCuttingToolMaterials(): Promise<CuttingToolMaterial[]> {
-    const response = await apiClient.getCuttingToolMaterials();
+  // Consumable Materials
+  static async getConsumableMaterials(): Promise<ConsumableMaterial[]> {
+    const response = await apiClient.getConsumableMaterials();
     if (!response.success) {
-      throw new Error(response.error || 'Failed to fetch cutting tool materials');
+      throw new Error(response.error || 'Failed to fetch consumable materials');
     }
-    return response.data as CuttingToolMaterial[];
+    return response.data as ConsumableMaterial[];
   }
 
-  static async createCuttingToolMaterial(data: CreateCuttingToolMaterialRequest): Promise<CuttingToolMaterial> {
-    const response = await apiClient.createCuttingToolMaterial(data);
+  static async createConsumableMaterial(data: CreateConsumableMaterialRequest): Promise<ConsumableMaterial> {
+    const response = await apiClient.createConsumableMaterial(data);
     if (!response.success) {
-      throw new Error(response.error || 'Failed to create cutting tool material');
+      throw new Error(response.error || 'Failed to create consumable material');
     }
-    return response.data as CuttingToolMaterial;
+    return response.data as ConsumableMaterial;
   }
 
-  static async updateCuttingToolMaterial(id: string, data: CreateCuttingToolMaterialRequest): Promise<CuttingToolMaterial> {
-    const response = await apiClient.updateCuttingToolMaterial(id, data);
+  static async updateConsumableMaterial(id: string, data: CreateConsumableMaterialRequest): Promise<ConsumableMaterial> {
+    const response = await apiClient.updateConsumableMaterial(id, data);
     if (!response.success) {
-      throw new Error(response.error || 'Failed to update cutting tool material');
+      throw new Error(response.error || 'Failed to update consumable material');
     }
-    return response.data as CuttingToolMaterial;
+    return response.data as ConsumableMaterial;
   }
 
-  static async deleteCuttingToolMaterial(id: string): Promise<void> {
-    const response = await apiClient.deleteCuttingToolMaterial(id);
+  static async deleteConsumableMaterial(id: string): Promise<void> {
+    const response = await apiClient.deleteConsumableMaterial(id);
     if (!response.success) {
-      throw new Error(response.error || 'Failed to delete cutting tool material');
+      throw new Error(response.error || 'Failed to delete consumable material');
     }
   }
 
-  // Cutting Tool Types
-  static async getCuttingToolTypes(): Promise<CuttingToolType[]> {
-    const response = await apiClient.getCuttingToolTypes();
+  // Consumable Types
+  static async getConsumableTypes(): Promise<ConsumableType[]> {
+    const response = await apiClient.getConsumableTypes();
     if (!response.success) {
-      throw new Error(response.error || 'Failed to fetch cutting tool types');
+      throw new Error(response.error || 'Failed to fetch consumable types');
     }
-    return response.data as CuttingToolType[];
+    return response.data as ConsumableType[];
   }
 
-  static async createCuttingToolType(data: CreateCuttingToolTypeRequest): Promise<CuttingToolType> {
-    const response = await apiClient.createCuttingToolType(data);
+  static async createConsumableType(data: CreateConsumableTypeRequest): Promise<ConsumableType> {
+    const response = await apiClient.createConsumableType(data);
     if (!response.success) {
-      throw new Error(response.error || 'Failed to create cutting tool type');
+      throw new Error(response.error || 'Failed to create consumable type');
     }
-    return response.data as CuttingToolType;
+    return response.data as ConsumableType;
   }
 
-  static async updateCuttingToolType(id: string, data: CreateCuttingToolTypeRequest): Promise<CuttingToolType> {
-    const response = await apiClient.updateCuttingToolType(id, data);
+  static async updateConsumableType(id: string, data: CreateConsumableTypeRequest): Promise<ConsumableType> {
+    const response = await apiClient.updateConsumableType(id, data);
     if (!response.success) {
-      throw new Error(response.error || 'Failed to update cutting tool type');
+      throw new Error(response.error || 'Failed to update consumable type');
     }
-    return response.data as CuttingToolType;
+    return response.data as ConsumableType;
   }
 
-  static async deleteCuttingToolType(id: string): Promise<void> {
-    const response = await apiClient.deleteCuttingToolType(id);
+  static async deleteConsumableType(id: string): Promise<void> {
+    const response = await apiClient.deleteConsumableType(id);
     if (!response.success) {
-      throw new Error(response.error || 'Failed to delete cutting tool type');
+      throw new Error(response.error || 'Failed to delete consumable type');
     }
   }
 }

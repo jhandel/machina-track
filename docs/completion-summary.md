@@ -16,7 +16,7 @@ We have successfully completed the robust, swappable SQLite database layer for t
 1. **Equipment Repository** - Equipment management and tracking
 2. **Metrology Tools Repository** - Measurement tools and calibration
 3. **Maintenance Tasks Repository** - Maintenance scheduling and tracking
-4. **Cutting Tools Repository** - Tool inventory and management
+4. **Consumables Repository** - Tool inventory and management
 5. **Calibration Logs Repository** - Calibration history and compliance
 6. **Service Records Repository** - Maintenance service documentation
 7. **Machine Logs Repository** - Equipment performance monitoring
@@ -69,7 +69,7 @@ The completed system handles:
 - **Service Documentation**: Record all maintenance work performed
 - **Calibration Compliance**: Track metrology tool calibrations
 - **Machine Monitoring**: Log equipment performance metrics
-- **Inventory Management**: Track cutting tools and supplies
+- **Inventory Management**: Track Consumables and supplies
 - **Real-Time Analytics**: Dashboard with live operational data
 - **Health Monitoring**: System and database health checks
 

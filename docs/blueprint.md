@@ -4,7 +4,7 @@
 
 - Equipment Management: Equipment Tracking: Track machines, including mills, lasers, and CNCs, with details like model, serial number, and location.
 - Metrology Tools: Metrology Tool Tracking: Manage metrology tools (calipers, surface plates, etc.) by serial number, with calibration logging.
-- Cutting Tool Inventory: Tool Inventory: Track quantities, types, and locations for cutting tools and bits. Track remaining tool life when possible, logging date when it runs out.
+- Consumables Inventory: Tool Inventory: Track quantities, types, and locations for Consumables and bits. Track remaining tool life when possible, logging date when it runs out.
 - Scheduled Maintenance: Maintenance Scheduling: Create and manage maintenance schedules for each machine, track upcoming tasks and service records.
 - Predictive Analysis: Predictive Tool Failure: Leverage machine logs with an AI tool that can predict possible premature tool failures before they cause larger issues.
 - Central Dashboard: Dashboard Overview: A central dashboard displaying critical information such as upcoming maintenance, low inventory alerts, and overdue calibrations.

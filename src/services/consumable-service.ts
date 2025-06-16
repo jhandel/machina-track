@@ -1,14 +1,14 @@
 /**
- * Cutting Tool Service
- * High-level service for cutting tool inventory management operations
+ * Consumable Service
+ * High-level service for consumable inventory management operations
  */
 
 import apiClient from './api-client';
-import type { CuttingTool } from '@/lib/types';
+import type { Consumable } from '@/lib/types';
 
-export class CuttingToolService {
+export class ConsumableService {
   /**
-   * Get all cutting tools with optional filtering
+   * Get all consumables with optional filtering
    */
   async getAll(params?: {
     limit?: number;
@@ -18,92 +18,92 @@ export class CuttingToolService {
     material?: string;
     low_inventory?: boolean;
     search?: string;
-  }): Promise<CuttingTool[]> {
-    const response = await apiClient.getCuttingTools(params);
+  }): Promise<Consumable[]> {
+    const response = await apiClient.getConsumables(params);
     if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to fetch cutting tools');
+      throw new Error(response.error || 'Failed to fetch consumables');
     }
-    return response.data as CuttingTool[];
+    return response.data as Consumable[];
   }
 
   /**
-   * Get a specific cutting tool by ID
+   * Get a specific consumable by ID
    */
-  async getById(id: string): Promise<CuttingTool | null> {
+  async getById(id: string): Promise<Consumable | null> {
     try {
-      const response = await apiClient.getCuttingToolById(id);
+      const response = await apiClient.getConsumableById(id);
       if (!response.success || !response.data) {
         return null;
       }
-      return response.data as CuttingTool;
+      return response.data as Consumable;
     } catch (error) {
-      console.error('Error fetching cutting tool:', error);
+      console.error('Error fetching consumable:', error);
       return null;
     }
   }
 
   /**
-   * Create a new cutting tool
+   * Create a new consumable
    */
-  async create(data: Omit<CuttingTool, 'id' | 'createdAt' | 'updatedAt'>): Promise<CuttingTool> {
-    const response = await apiClient.createCuttingTool(data);
+  async create(data: Omit<Consumable, 'id' | 'createdAt' | 'updatedAt'>): Promise<Consumable> {
+    const response = await apiClient.createConsumable(data);
     if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to create cutting tool');
+      throw new Error(response.error || 'Failed to create consumable');
     }
-    return response.data as CuttingTool;
+    return response.data as Consumable;
   }
 
   /**
-   * Update an existing cutting tool
+   * Update an existing consumable
    */
-  async update(id: string, data: Partial<CuttingTool>): Promise<CuttingTool> {
-    const response = await apiClient.updateCuttingTool(id, data);
+  async update(id: string, data: Partial<Consumable>): Promise<Consumable> {
+    const response = await apiClient.updateConsumable(id, data);
     if (!response.success || !response.data) {
-      throw new Error(response.error || 'Failed to update cutting tool');
+      throw new Error(response.error || 'Failed to update consumable');
     }
-    return response.data as CuttingTool;
+    return response.data as Consumable;
   }
 
   /**
-   * Delete a cutting tool
+   * Delete a consumable
    */
   async delete(id: string): Promise<void> {
-    const response = await apiClient.deleteCuttingTool(id);
+    const response = await apiClient.deleteConsumable(id);
     if (!response.success) {
-      throw new Error(response.error || 'Failed to delete cutting tool');
+      throw new Error(response.error || 'Failed to delete consumable');
     }
   }
 
   /**
    * Get tools by location
    */
-  async getByLocation(location: string, limit?: number): Promise<CuttingTool[]> {
+  async getByLocation(location: string, limit?: number): Promise<Consumable[]> {
     return this.getAll({ location, limit });
   }
 
   /**
    * Get tools by type
    */
-  async getByType(type: string, limit?: number): Promise<CuttingTool[]> {
+  async getByType(type: string, limit?: number): Promise<Consumable[]> {
     return this.getAll({ type, limit });
   }
 
   /**
    * Get low inventory tools
    */
-  async getLowInventory(): Promise<CuttingTool[]> {
+  async getLowInventory(): Promise<Consumable[]> {
     return this.getAll({ low_inventory: true });
   }
 
   /**
-   * Search cutting tools
+   * Search consumables
    */
-  async search(query: string, limit?: number): Promise<CuttingTool[]> {
+  async search(query: string, limit?: number): Promise<Consumable[]> {
     return this.getAll({ search: query, limit });
   }
 
   /**
-   * Get cutting tool statistics
+   * Get consumable statistics
    */
   async getInventoryStats(): Promise<{
     totalTools: number;
@@ -111,7 +111,7 @@ export class CuttingToolService {
     lowInventoryCount: number;
     toolsByLocation: { [location: string]: number };
     toolsByType: { [type: string]: number };
-    recentlyAdded: CuttingTool[];
+    recentlyAdded: Consumable[];
   }> {
     const [allTools, lowInventoryTools] = await Promise.all([
       this.getAll(),
@@ -149,14 +149,14 @@ export class CuttingToolService {
   /**
    * Update tool quantity (for inventory management)
    */
-  async updateQuantity(id: string, quantity: number): Promise<CuttingTool> {
+  async updateQuantity(id: string, quantity: number): Promise<Consumable> {
     return this.update(id, { quantity });
   }
 
   /**
    * Add to inventory
    */
-  async addToInventory(id: string, addQuantity: number): Promise<CuttingTool> {
+  async addToInventory(id: string, addQuantity: number): Promise<Consumable> {
     const tool = await this.getById(id);
     if (!tool) {
       throw new Error('Tool not found');
@@ -168,7 +168,7 @@ export class CuttingToolService {
   /**
    * Remove from inventory
    */
-  async removeFromInventory(id: string, removeQuantity: number): Promise<CuttingTool> {
+  async removeFromInventory(id: string, removeQuantity: number): Promise<Consumable> {
     const tool = await this.getById(id);
     if (!tool) {
       throw new Error('Tool not found');
@@ -179,4 +179,4 @@ export class CuttingToolService {
 }
 
 // Export singleton instance
-export const cuttingToolService = new CuttingToolService();
+export const consumableService = new ConsumableService();

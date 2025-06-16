@@ -1,5 +1,5 @@
 import { getPrismaClient } from '@/lib/database/prisma-client';
-import type { Location, Manufacturer, MetrologyToolType, CuttingToolMaterial, CuttingToolType, SettingsRepository } from '@/lib/database/interfaces';
+import type { Location, Manufacturer, MetrologyToolType, ConsumableMaterial, ConsumableType, SettingsRepository } from '@/lib/database/interfaces';
 
 export class PrismaSettingsRepository implements SettingsRepository {
   // Locations
@@ -155,10 +155,10 @@ export class PrismaSettingsRepository implements SettingsRepository {
     });
   }
 
-  // Cutting Tool Materials
-  async getAllCuttingToolMaterials(): Promise<CuttingToolMaterial[]> {
+  // Consumable Materials
+  async getAllConsumableMaterials(): Promise<ConsumableMaterial[]> {
     const prisma = await getPrismaClient();
-    const materials = await prisma.cutting_tool_materials.findMany({
+    const materials = await prisma.consumable_materials.findMany({
       orderBy: { name: 'asc' }
     });
     return materials.map(m => ({
@@ -169,9 +169,9 @@ export class PrismaSettingsRepository implements SettingsRepository {
     }));
   }
 
-  async createCuttingToolMaterial(name: string): Promise<CuttingToolMaterial> {
+  async createConsumableMaterial(name: string): Promise<ConsumableMaterial> {
     const prisma = await getPrismaClient();
-    const material = await prisma.cutting_tool_materials.create({
+    const material = await prisma.consumable_materials.create({
       data: {
         id: crypto.randomUUID(),
         name,
@@ -185,9 +185,9 @@ export class PrismaSettingsRepository implements SettingsRepository {
     };
   }
 
-  async updateCuttingToolMaterial(id: string, name: string): Promise<CuttingToolMaterial> {
+  async updateConsumableMaterial(id: string, name: string): Promise<ConsumableMaterial> {
     const prisma = await getPrismaClient();
-    const material = await prisma.cutting_tool_materials.update({
+    const material = await prisma.consumable_materials.update({
       where: { id },
       data: { name, updated_at: new Date() },
     });
@@ -199,17 +199,17 @@ export class PrismaSettingsRepository implements SettingsRepository {
     };
   }
 
-  async deleteCuttingToolMaterial(id: string): Promise<void> {
+  async deleteConsumableMaterial(id: string): Promise<void> {
     const prisma = await getPrismaClient();
-    await prisma.cutting_tool_materials.delete({
+    await prisma.consumable_materials.delete({
       where: { id },
     });
   }
 
-  // Cutting Tool Types
-  async getAllCuttingToolTypes(): Promise<CuttingToolType[]> {
+  // Consumable Types
+  async getAllConsumableTypes(): Promise<ConsumableType[]> {
     const prisma = await getPrismaClient();
-    const types = await prisma.cutting_tool_types.findMany({
+    const types = await prisma.consumable_types.findMany({
       orderBy: { name: 'asc' }
     });
     return types.map(t => ({
@@ -220,9 +220,9 @@ export class PrismaSettingsRepository implements SettingsRepository {
     }));
   }
 
-  async createCuttingToolType(name: string): Promise<CuttingToolType> {
+  async createConsumableType(name: string): Promise<ConsumableType> {
     const prisma = await getPrismaClient();
-    const type = await prisma.cutting_tool_types.create({
+    const type = await prisma.consumable_types.create({
       data: {
         id: crypto.randomUUID(),
         name,
@@ -236,9 +236,9 @@ export class PrismaSettingsRepository implements SettingsRepository {
     };
   }
 
-  async updateCuttingToolType(id: string, name: string): Promise<CuttingToolType> {
+  async updateConsumableType(id: string, name: string): Promise<ConsumableType> {
     const prisma = await getPrismaClient();
-    const type = await prisma.cutting_tool_types.update({
+    const type = await prisma.consumable_types.update({
       where: { id },
       data: { name, updated_at: new Date() },
     });
@@ -250,9 +250,9 @@ export class PrismaSettingsRepository implements SettingsRepository {
     };
   }
 
-  async deleteCuttingToolType(id: string): Promise<void> {
+  async deleteConsumableType(id: string): Promise<void> {
     const prisma = await getPrismaClient();
-    await prisma.cutting_tool_types.delete({
+    await prisma.consumable_types.delete({
       where: { id },
     });
   }
