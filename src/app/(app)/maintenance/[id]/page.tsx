@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/common/PageHeader';
-import { ClipboardList, Edit, Trash2, CheckSquare, History } from 'lucide-react';
+import { ClipboardList, Edit, Trash2, CheckSquare, History, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -196,7 +196,12 @@ export default function MaintenanceTaskDetailPage() {
         actions={
           <div className="flex gap-2">
             <Button variant="outline" asChild>
-              <Link href={`/maintenance/${task.id}/edit`} className="inline-flex items-center justify-center gap-2"> {/* Placeholder for edit page */}
+              <Link href="/maintenance">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Maintenance
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href={`/maintenance/${task.id}/edit`}>
                 <Edit className="mr-2 h-4 w-4" /> Edit Task
               </Link>
             </Button>

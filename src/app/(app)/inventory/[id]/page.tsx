@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/common/PageHeader';
-import { Package, Edit, Trash2, PlusCircle, MinusCircle, History } from 'lucide-react';
+import { Package, Edit, Trash2, PlusCircle, MinusCircle, History, ArrowLeft  } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -152,7 +152,12 @@ export default function InventoryItemDetailPage() {
         actions={
           <div className="flex gap-2">
             <Button variant="outline" asChild>
-              <Link href={`/inventory/${tool.id}/edit`}> {/* Placeholder for edit page */}
+              <Link href="/inventory">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Inventory
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href={`/inventory/${tool.id}/edit`}>
                 <Edit className="mr-2 h-4 w-4" /> Edit
               </Link>
             </Button>

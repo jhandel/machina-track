@@ -221,7 +221,7 @@ export default function EquipmentPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem asChild><Link href={`/equipment/${eq.id}`}>View Details</Link></DropdownMenuItem>
-                          <DropdownMenuItem>Edit</DropdownMenuItem>
+                          <DropdownMenuItem asChild><Link href={`/equipment/${eq.id}/edit`}>Edit</Link></DropdownMenuItem>
                           <DropdownMenuItem>Schedule Maintenance</DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>

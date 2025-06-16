@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/common/PageHeader';
-import { Factory, Edit, Trash2, CalendarPlus, BarChart } from 'lucide-react';
+import { Factory, Edit, Trash2, CalendarPlus, BarChart, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -174,6 +174,11 @@ export default function EquipmentDetailPage() {
         description={`Details for ${equipment.model} (S/N: ${equipment.serialNumber})`}
         actions={
           <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/equipment">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Equipment
+              </Link>
+            </Button>
             <Button variant="outline" asChild>
               <Link href={`/equipment/${equipment.id}/edit`}> {/* Placeholder for edit page */}
                 <Edit className="mr-2 h-4 w-4" /> Edit

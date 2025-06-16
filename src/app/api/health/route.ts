@@ -6,7 +6,7 @@ import { checkDatabaseHealth } from '@/lib/database/connection';
  */
 export async function GET(request: NextRequest) {
   try {
-    const isHealthy = checkDatabaseHealth();
+    const isHealthy = await checkDatabaseHealth();
     
     if (!isHealthy) {
       return NextResponse.json(

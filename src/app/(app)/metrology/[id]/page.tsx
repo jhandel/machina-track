@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/common/PageHeader';
-import { Ruler, Edit, Trash2, CalendarPlus, ListChecks } from 'lucide-react';
+import { Ruler, Edit, Trash2, CalendarPlus, ListChecks, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -170,6 +170,11 @@ export default function MetrologyToolDetailPage() {
         description={`Details for ${tool.type} (S/N: ${tool.serialNumber})`}
         actions={
           <div className="flex gap-2">
+              <Button variant="outline" asChild>
+              <Link href="/metrology">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Metrology
+              </Link>
+            </Button>
             <Button variant="outline" asChild>
               <Link href={`/metrology/${tool.id}/edit`}> {/* Placeholder for edit page */}
                 <Edit className="mr-2 h-4 w-4" /> Edit Tool
