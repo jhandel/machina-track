@@ -9,7 +9,12 @@ export class PrismaEquipmentRepository implements EquipmentRepository {
       const prisma = await getPrismaClient();
     try {
       const prisma = await getPrismaClient();
-      const equipment = await prisma.equipment.findUnique({ where: { id } });
+      const equipment = await prisma.equipment.findUnique({ 
+        where: { id },
+        include: {
+          locations: true,
+        },
+      });
       return equipment ? this.mapToEquipment(equipment) : null;
     } catch (error) {
       throw new DatabaseError(`Failed to find equipment by id: ${error}`);
@@ -24,6 +29,9 @@ export class PrismaEquipmentRepository implements EquipmentRepository {
         skip: offset,
         take: limit,
         orderBy: { updated_at: 'desc' },
+        include: {
+          locations: true,
+        },
       });
       return equipmentList.map(this.mapToEquipment);
     } catch (error) {
@@ -41,11 +49,14 @@ export class PrismaEquipmentRepository implements EquipmentRepository {
           name: item.name,
           model: item.model,
           serial_number: item.serialNumber,
-          location: item.location,
+          location_id: item.locationId,
           purchase_date: item.purchaseDate ?? null,
           status: item.status,
           image_url: item.imageUrl ?? null,
           notes: item.notes ?? null,
+        },
+        include: {
+          locations: true,
         },
       });
       return this.mapToEquipment(created);
@@ -67,11 +78,14 @@ export class PrismaEquipmentRepository implements EquipmentRepository {
           name: item.name,
           model: item.model,
           serial_number: item.serialNumber,
-          location: item.location,
+          location_id: item.locationId,
           purchase_date: item.purchaseDate,
           status: item.status,
           image_url: item.imageUrl,
           notes: item.notes,
+        },
+        include: {
+          locations: true,
         },
       });
       return this.mapToEquipment(updated);
@@ -117,6 +131,9 @@ export class PrismaEquipmentRepository implements EquipmentRepository {
       const equipmentList = await prisma.equipment.findMany({
         where: { status },
         orderBy: { updated_at: 'desc' },
+        include: {
+          locations: true,
+        },
       });
       return equipmentList.map(this.mapToEquipment);
     } catch (error) {
@@ -124,13 +141,16 @@ export class PrismaEquipmentRepository implements EquipmentRepository {
     }
   }
 
-  async findByLocation(location: string): Promise<Equipment[]> {
+  async findByLocation(locationId: string): Promise<Equipment[]> {
       const prisma = await getPrismaClient();
     try {
       const prisma = await getPrismaClient();
       const equipmentList = await prisma.equipment.findMany({
-        where: { location },
+        where: { location_id: locationId },
         orderBy: { name: 'asc' },
+        include: {
+          locations: true,
+        },
       });
       return equipmentList.map(this.mapToEquipment);
     } catch (error) {
@@ -142,7 +162,12 @@ export class PrismaEquipmentRepository implements EquipmentRepository {
       const prisma = await getPrismaClient();
     try {
       const prisma = await getPrismaClient();
-      const equipment = await prisma.equipment.findUnique({ where: { serial_number: serialNumber } });
+      const equipment = await prisma.equipment.findUnique({ 
+        where: { serial_number: serialNumber },
+        include: {
+          locations: true,
+        },
+      });
       return equipment ? this.mapToEquipment(equipment) : null;
     } catch (error) {
       throw new DatabaseError(`Failed to find equipment by serial number: ${error}`);
@@ -159,10 +184,13 @@ export class PrismaEquipmentRepository implements EquipmentRepository {
             { name: { contains: query } },
             { model: { contains: query } },
             { serial_number: { contains: query } },
-            { location: { contains: query } },
+            { locations: { name: { contains: query } } },
           ],
         },
         orderBy: { name: 'asc' },
+        include: {
+          locations: true,
+        },
       });
       return equipmentList.map(this.mapToEquipment);
     } catch (error) {
@@ -176,7 +204,8 @@ export class PrismaEquipmentRepository implements EquipmentRepository {
       name: row.name,
       model: row.model,
       serialNumber: row.serial_number,
-      location: row.location,
+      locationId: row.location_id,
+      location: row.locations?.name,
       purchaseDate: row.purchase_date,
       status: row.status,
       imageUrl: row.image_url,

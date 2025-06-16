@@ -4,9 +4,9 @@ import type {
   CalibrationLog, 
   Consumable, 
   MaintenanceTask, 
-  ServiceRecord, 
+  ServiceRecord,
   MachineLogEntry,
-  DashboardSummary 
+  DashboardSummary
 } from '@/lib/types';
 
 /**
@@ -26,7 +26,7 @@ export interface BaseRepository<T> {
  */
 export interface EquipmentRepository extends BaseRepository<Equipment> {
   findByStatus(status: Equipment['status']): Promise<Equipment[]>;
-  findByLocation(locationId: string): Promise<Equipment[]>;
+  findByLocation(location: string): Promise<Equipment[]>;
   findBySerialNumber(serialNumber: string): Promise<Equipment | null>;
   search(query: string): Promise<Equipment[]>;
 }
@@ -56,11 +56,53 @@ export interface CalibrationLogRepository extends BaseRepository<CalibrationLog>
  */
 export interface ConsumableRepository extends BaseRepository<Consumable> {
   findLowInventory(): Promise<Consumable[]>;
-  findByLocation(locationId: string): Promise<Consumable[]>;
-  findByType(typeId: string): Promise<Consumable[]>;
+  findByLocation(location: string): Promise<Consumable[]>;
+  findByType(type: string): Promise<Consumable[]>;
   findEndOfLife(date?: string): Promise<Consumable[]>;
   search(query: string): Promise<Consumable[]>;
   updateQuantity(id: string, quantity: number): Promise<Consumable | null>;
+}
+
+/**
+ * Generic repository interface for common CRUD operations
+ */
+export interface BaseRepository<T> {
+  findById(id: string): Promise<T | null>;
+  findAll(limit?: number, offset?: number): Promise<T[]>;
+  create(item: Omit<T, 'id'>): Promise<T>;
+  update(id: string, item: Partial<T>): Promise<T | null>;
+  delete(id: string): Promise<boolean>;
+  count(): Promise<number>;
+}
+
+/**
+ * Equipment repository interface
+ */
+export interface EquipmentRepository extends BaseRepository<Equipment> {
+  findByStatus(status: Equipment['status']): Promise<Equipment[]>;
+  findByLocation(location: string): Promise<Equipment[]>;
+  findBySerialNumber(serialNumber: string): Promise<Equipment | null>;
+  search(query: string): Promise<Equipment[]>;
+}
+
+/**
+ * Metrology tool repository interface
+ */
+export interface MetrologyToolRepository extends BaseRepository<MetrologyTool> {
+  findByStatus(status: MetrologyTool['status']): Promise<MetrologyTool[]>;
+  findDueForCalibration(date?: string): Promise<MetrologyTool[]>;
+  findOverdueCalibration(date?: string): Promise<MetrologyTool[]>;
+  findBySerialNumber(serialNumber: string): Promise<MetrologyTool | null>;
+  search(query: string): Promise<MetrologyTool[]>;
+}
+
+/**
+ * Calibration log repository interface
+ */
+export interface CalibrationLogRepository extends BaseRepository<CalibrationLog> {
+  findByToolId(toolId: string): Promise<CalibrationLog[]>;
+  findByDateRange(startDate: string, endDate: string): Promise<CalibrationLog[]>;
+  findByPerformer(performedBy: string): Promise<CalibrationLog[]>;
 }
 
 /**

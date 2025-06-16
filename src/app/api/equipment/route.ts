@@ -8,7 +8,7 @@ const EquipmentSchema = z.object({
   name: z.string().min(1),
   model: z.string().min(1),
   serialNumber: z.string().min(1),
-  location: z.string().min(1),
+  locationId: z.string().min(1),
   purchaseDate: z.string().optional(),
   status: z.enum(['operational', 'maintenance', 'decommissioned']).default('operational'),
   imageUrl: z.string().optional(),

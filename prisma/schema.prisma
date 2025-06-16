@@ -8,9 +8,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model calibration_logs {
-  id                String   @id
+  id                String          @id
   metrology_tool_id String
   date              String
   performed_by      String
@@ -18,22 +17,37 @@ model calibration_logs {
   result            String
   certificate_url   String?
   next_due_date     String?
-  created_at        DateTime @default(now())
+  created_at        DateTime        @default(now())
   metrology_tools   metrology_tools @relation(fields: [metrology_tool_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([metrology_tool_id], map: "idx_calibration_logs_tool")
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model consumable_materials {
+  id          String        @id
+  name        String        @unique
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @default(now())
+  consumables consumables[]
+}
+
+model consumable_types {
+  id          String        @id
+  name        String        @unique
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @default(now())
+  consumables consumables[]
+}
+
 model consumables {
-  id                        String   @id
+  id                        String                @id
   name                      String
-  type                      String
-  material                  String?
+  type_id                   String
+  material_id               String?
   size                      String?
-  quantity                  Int       @default(0)
-  min_quantity              Int       @default(0)
-  location                  String
+  quantity                  Int                   @default(0)
+  min_quantity              Int                   @default(0)
+  location_id               String
   tool_life_hours           Float?
   remaining_tool_life_hours Float?
   last_used_date            String?
@@ -42,42 +56,74 @@ model consumables {
   cost_per_unit             Float?
   image_url                 String?
   notes                     String?
-  created_at                DateTime @default(now())
-  updated_at                DateTime @default(now())
+  created_at                DateTime              @default(now())
+  updated_at                DateTime              @default(now())
+  locations                 locations             @relation(fields: [location_id], references: [id], onUpdate: NoAction)
+  consumable_materials      consumable_materials? @relation(fields: [material_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  consumable_types          consumable_types      @relation(fields: [type_id], references: [id], onUpdate: NoAction)
 
+  @@index([material_id], map: "idx_consumables_material")
+  @@index([type_id], map: "idx_consumables_type")
+  @@index([location_id], map: "idx_consumables_location")
   @@index([quantity], map: "idx_consumables_quantity")
-  @@index([location], map: "idx_consumables_location")
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model equipment {
+  id                  String                @id
+  name                String
+  model               String
+  serial_number       String                @unique(map: "sqlite_autoindex_equipment_2")
+  location_id         String
+  purchase_date       String?
+  status              String                @default("operational")
+  image_url           String?
+  notes               String?
+  created_at          DateTime              @default(now())
+  updated_at          DateTime              @default(now())
+  locations           locations             @relation(fields: [location_id], references: [id], onUpdate: NoAction)
+  machine_log_entries machine_log_entries[]
+  maintenance_tasks   maintenance_tasks[]
+
+  @@index([status], map: "idx_equipment_status")
+  @@index([location_id], map: "idx_equipment_location")
+}
+
+model locations {
+  id              String            @id
+  name            String            @unique
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @default(now())
+  consumables     consumables[]
+  equipment       equipment[]
+  metrology_tools metrology_tools[]
+}
+
 model machine_log_entries {
-  id           String   @id
+  id           String    @id
   equipment_id String
   timestamp    String
   error_code   String?
   metric_name  String
   metric_value String
   notes        String?
-  created_at   DateTime @default(now())
+  created_at   DateTime  @default(now())
   equipment    equipment @relation(fields: [equipment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([timestamp], map: "idx_machine_logs_timestamp")
   @@index([equipment_id], map: "idx_machine_logs_equipment")
+  @@index([timestamp], map: "idx_machine_logs_timestamp")
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model maintenance_parts {
-  id                  String   @id
+  id                  String            @id
   maintenance_task_id String
   part_name           String
-  quantity            Int      @default(1)
-  created_at          DateTime @default(now())
+  quantity            Int               @default(1)
+  created_at          DateTime          @default(now())
   maintenance_tasks   maintenance_tasks @relation(fields: [maintenance_task_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model maintenance_tasks {
-  id                  String   @id
+  id                  String              @id
   equipment_id        String
   description         String
   frequency_days      Int?
@@ -85,115 +131,80 @@ model maintenance_tasks {
   next_due_date       String?
   assigned_to         String?
   notes               String?
-  status              String   @default("pending")
-  created_at          DateTime @default(now())
-  updated_at          DateTime @default(now())
+  status              String              @default("pending")
+  created_at          DateTime            @default(now())
+  updated_at          DateTime            @default(now())
   maintenance_parts   maintenance_parts[]
-  equipment           equipment @relation(fields: [equipment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  equipment           equipment           @relation(fields: [equipment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   service_records     service_records[]
 
-  @@index([equipment_id], map: "idx_maintenance_tasks_equipment")
-  @@index([next_due_date], map: "idx_maintenance_tasks_next_due")
   @@index([status], map: "idx_maintenance_tasks_status")
+  @@index([next_due_date], map: "idx_maintenance_tasks_next_due")
+  @@index([equipment_id], map: "idx_maintenance_tasks_equipment")
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model manufacturers {
+  id              String            @id
+  name            String            @unique
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @default(now())
+  metrology_tools metrology_tools[]
+}
+
+model metrology_tool_types {
+  id              String            @id
+  name            String            @unique
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @default(now())
+  metrology_tools metrology_tools[]
+}
+
+model metrology_tools {
+  id                        String               @id
+  name                      String
+  type_id                   String
+  serial_number             String               @unique(map: "sqlite_autoindex_metrology_tools_2")
+  manufacturer_id           String?
+  calibration_interval_days Int
+  last_calibration_date     String?
+  next_calibration_date     String?
+  location_id               String?
+  status                    String               @default("calibrated")
+  image_url                 String?
+  notes                     String?
+  created_at                DateTime             @default(now())
+  updated_at                DateTime             @default(now())
+  calibration_logs          calibration_logs[]
+  locations                 locations?           @relation(fields: [location_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  manufacturers             manufacturers?       @relation(fields: [manufacturer_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  metrology_tool_types      metrology_tool_types @relation(fields: [type_id], references: [id], onUpdate: NoAction)
+
+  @@index([location_id], map: "idx_metrology_tools_location")
+  @@index([manufacturer_id], map: "idx_metrology_tools_manufacturer")
+  @@index([type_id], map: "idx_metrology_tools_type")
+  @@index([status], map: "idx_metrology_tools_status")
+  @@index([next_calibration_date], map: "idx_metrology_tools_next_calibration")
+}
+
 model service_record_attachments {
-  id                String   @id
+  id                String          @id
   service_record_id String
   attachment_url    String
-  created_at        DateTime @default(now())
+  created_at        DateTime        @default(now())
   service_records   service_records @relation(fields: [service_record_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model service_records {
-  id                         String   @id
+  id                         String                       @id
   maintenance_task_id        String
   date                       String
   performed_by               String
   description_of_work        String
   cost                       Float?
   notes                      String?
-  created_at                 DateTime @default(now())
+  created_at                 DateTime                     @default(now())
   service_record_attachments service_record_attachments[]
-  maintenance_tasks          maintenance_tasks @relation(fields: [maintenance_task_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  maintenance_tasks          maintenance_tasks            @relation(fields: [maintenance_task_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([maintenance_task_id], map: "idx_service_records_task")
-}
-
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
-model metrology_tools {
-  id                        String   @id
-  name                      String
-  type                      String
-  serial_number             String   @unique(map: "sqlite_autoindex_metrology_tools_2")
-  manufacturer              String?
-  calibration_interval_days Int
-  last_calibration_date     String?
-  next_calibration_date     String?
-  location                  String?
-  status                    String   @default("calibrated")
-  image_url                 String?
-  notes                     String?
-  created_at                DateTime @default(now())
-  updated_at                DateTime @default(now())
-  calibration_logs          calibration_logs[]
-
-  @@index([next_calibration_date], map: "idx_metrology_tools_next_calibration")
-  @@index([status], map: "idx_metrology_tools_status")
-}
-
-model equipment {
-  id                  String   @id
-  name                String
-  model               String
-  serial_number       String   @unique(map: "sqlite_autoindex_equipment_2")
-  location            String
-  purchase_date       String?
-  status              String   @default("operational")
-  image_url           String?
-  notes               String?
-  created_at          DateTime @default(now())
-  updated_at          DateTime @default(now())
-  machine_log_entries machine_log_entries[]
-  maintenance_tasks   maintenance_tasks[]
-
-  @@index([location], map: "idx_equipment_location")
-  @@index([status], map: "idx_equipment_status")
-}
-
-model locations {
-  id         String   @id
-  name       String   @unique
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now())
-}
-
-model manufacturers {
-  id         String   @id
-  name       String   @unique
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now())
-}
-
-model metrology_tool_types {
-  id         String   @id
-  name       String   @unique
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now())
-}
-
-model consumable_materials {
-  id         String   @id
-  name       String   @unique
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now())
-}
-
-model consumable_types {
-  id         String   @id
-  name       String   @unique
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now())
 }

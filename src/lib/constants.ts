@@ -57,9 +57,3 @@ export const METROLOGY_STATUSES: MetrologyTool['status'][] = ['calibrated', 'due
 export const CALIBRATION_RESULTS: CalibrationLog['result'][] = ['pass', 'fail', 'adjusted'];
 export const MAINTENANCE_STATUSES: MaintenanceTask['status'][] = ['pending', 'in_progress', 'completed', 'overdue', 'skipped'];
 
-export const MOCK_LOCATIONS = ["Shop Floor A", "Shop Floor B", "Storage Room 1", "Inspection Lab"];
-export const MOCK_MANUFACTURERS = ["Haas", "DMG Mori", "Okuma", "Mazak", "Mitutoyo", "Starrett"];
-export const MOCK_TOOL_TYPES_METROLOGY = ["Caliper", "Micrometer", "Height Gauge", "Surface Plate", "Gauge Blocks"];
-export const MOCK_TOOL_TYPES_CUTTING = ["End Mill", "Drill Bit", "Lathe Insert", "Reamer", "Tap"];
-export const MOCK_MATERIALS_CUTTING = ["HSS", "Carbide", "Cobalt", "PCD"];
-

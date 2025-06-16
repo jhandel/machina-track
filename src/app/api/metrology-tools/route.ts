@@ -6,14 +6,14 @@ import { z } from 'zod';
 // Validation schema for metrology tools
 const MetrologyToolSchema = z.object({
   name: z.string().min(1),
-  type: z.string().min(1),
+  typeId: z.string().min(1),
   serialNumber: z.string().min(1),
-  manufacturer: z.string().optional(),
+  manufacturerId: z.string().optional(),
   calibrationIntervalDays: z.number().int().min(1),
   lastCalibrationDate: z.string().optional(),
   nextCalibrationDate: z.string().optional(),
   calibrationLogIds: z.array(z.string()).default([]),
-  location: z.string().optional(),
+  locationId: z.string().optional(),
   status: z.enum(['calibrated', 'due_calibration', 'out_of_service', 'awaiting_calibration']).default('calibrated'),
   imageUrl: z.string().optional(),
   notes: z.string().optional()

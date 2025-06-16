@@ -8,7 +8,14 @@ export class PrismaConsumableRepository implements ConsumableRepository {
   async findById(id: string): Promise<Consumable | null> {
     try {
       const prisma = await getPrismaClient();
-      const tool = await prisma.consumables.findUnique({ where: { id } });
+      const tool = await prisma.consumables.findUnique({ 
+        where: { id },
+        include: {
+          consumable_types: true,
+          consumable_materials: true,
+          locations: true,
+        },
+      });
       return tool ? this.mapToConsumable(tool) : null;
     } catch (error) {
       throw new DatabaseError(`Failed to find consumable by id: ${error}`);
@@ -22,6 +29,11 @@ export class PrismaConsumableRepository implements ConsumableRepository {
         skip: offset,
         take: limit,
         orderBy: { updated_at: 'desc' },
+        include: {
+          consumable_types: true,
+          consumable_materials: true,
+          locations: true,
+        },
       });
       return tools.map(this.mapToConsumable);
     } catch (error) {
@@ -36,12 +48,12 @@ export class PrismaConsumableRepository implements ConsumableRepository {
         data: {
           id: uuidv4(),
           name: item.name,
-          type: item.type,
-          material: item.material ?? null,
+          type_id: item.typeId,
+          material_id: item.materialId ?? null,
           size: item.size ?? null,
           quantity: item.quantity,
           min_quantity: item.minQuantity,
-          location: item.location,
+          location_id: item.locationId,
           tool_life_hours: item.toolLifeHours ?? null,
           remaining_tool_life_hours: item.remainingToolLifeHours ?? null,
           last_used_date: item.lastUsedDate ?? null,
@@ -50,6 +62,11 @@ export class PrismaConsumableRepository implements ConsumableRepository {
           cost_per_unit: item.costPerUnit ?? null,
           image_url: item.imageUrl ?? null,
           notes: item.notes ?? null,
+        },
+        include: {
+          consumable_types: true,
+          consumable_materials: true,
+          locations: true,
         },
       });
       return this.mapToConsumable(created);
@@ -65,12 +82,12 @@ export class PrismaConsumableRepository implements ConsumableRepository {
         where: { id },
         data: {
           name: item.name,
-          type: item.type,
-          material: item.material,
+          type_id: item.typeId,
+          material_id: item.materialId,
           size: item.size,
           quantity: item.quantity,
           min_quantity: item.minQuantity,
-          location: item.location,
+          location_id: item.locationId,
           tool_life_hours: item.toolLifeHours,
           remaining_tool_life_hours: item.remainingToolLifeHours,
           last_used_date: item.lastUsedDate,
@@ -79,6 +96,11 @@ export class PrismaConsumableRepository implements ConsumableRepository {
           cost_per_unit: item.costPerUnit,
           image_url: item.imageUrl,
           notes: item.notes,
+        },
+        include: {
+          consumable_types: true,
+          consumable_materials: true,
+          locations: true,
         },
       });
       return this.mapToConsumable(updated);
@@ -112,12 +134,17 @@ export class PrismaConsumableRepository implements ConsumableRepository {
     }
   }
 
-  async findByLocation(location: string): Promise<Consumable[]> {
+  async findByLocation(locationId: string): Promise<Consumable[]> {
       const prisma = await getPrismaClient();
     try {
       const tools = await prisma.consumables.findMany({
-        where: { location },
+        where: { location_id: locationId },
         orderBy: { name: 'asc' },
+        include: {
+          consumable_types: true,
+          consumable_materials: true,
+          locations: true,
+        },
       });
       return tools.map(this.mapToConsumable);
     } catch (error) {
@@ -132,15 +159,20 @@ export class PrismaConsumableRepository implements ConsumableRepository {
         where: {
           OR: [
             { name: { contains: query } },
-            { type: { contains: query } },
-            { material: { contains: query } },
+            { consumable_types: { name: { contains: query } } },
+            { consumable_materials: { name: { contains: query } } },
             { size: { contains: query } },
-            { location: { contains: query } },
+            { locations: { name: { contains: query } } },
             { supplier: { contains: query } },
             { notes: { contains: query } },
           ],
         },
         orderBy: { name: 'asc' },
+        include: {
+          consumable_types: true,
+          consumable_materials: true,
+          locations: true,
+        },
       });
       return tools.map(this.mapToConsumable);
     } catch (error) {
@@ -159,6 +191,11 @@ export class PrismaConsumableRepository implements ConsumableRepository {
           { quantity: 'asc' },
           { name: 'asc' },
         ],
+        include: {
+          consumable_types: true,
+          consumable_materials: true,
+          locations: true,
+        },
       });
       return tools.map(this.mapToConsumable);
     } catch (error) {
@@ -166,12 +203,17 @@ export class PrismaConsumableRepository implements ConsumableRepository {
     }
   }
 
-  async findByType(type: string): Promise<Consumable[]> {
+  async findByType(typeId: string): Promise<Consumable[]> {
       const prisma = await getPrismaClient();
     try {
       const tools = await prisma.consumables.findMany({
-        where: { type },
+        where: { type_id: typeId },
         orderBy: { name: 'asc' },
+        include: {
+          consumable_types: true,
+          consumable_materials: true,
+          locations: true,
+        },
       });
       return tools.map(this.mapToConsumable);
     } catch (error) {
@@ -215,12 +257,15 @@ export class PrismaConsumableRepository implements ConsumableRepository {
     return {
       id: row.id,
       name: row.name,
-      type: row.type,
-      material: row.material,
+      typeId: row.type_id,
+      type: row.consumable_types?.name,
+      materialId: row.material_id,
+      material: row.consumable_materials?.name,
       size: row.size,
       quantity: row.quantity,
       minQuantity: row.min_quantity,
-      location: row.location,
+      locationId: row.location_id,
+      location: row.locations?.name,
       toolLifeHours: row.tool_life_hours,
       remainingToolLifeHours: row.remaining_tool_life_hours,
       lastUsedDate: row.last_used_date,

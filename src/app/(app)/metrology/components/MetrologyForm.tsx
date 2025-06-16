@@ -22,17 +22,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  METROLOGY_STATUSES,
-  MOCK_LOCATIONS,
-  MOCK_MANUFACTURERS,
-  MOCK_TOOL_TYPES_METROLOGY,
-} from "@/lib/constants";
+import { METROLOGY_STATUSES } from "@/lib/constants";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { MetrologyService } from "@/services/metrology-service";
+import { SettingsService } from "@/services/settings-service";
 import type { MetrologyTool } from "@/lib/types";
+import type {
+  Location,
+  Manufacturer,
+  MetrologyToolType,
+} from "@/lib/database/interfaces";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,12 +56,12 @@ interface MetrologyFormProps {
 
 interface FormData {
   name: string;
-  type: string;
+  typeId: string;
   serialNumber: string;
-  manufacturer?: string;
+  manufacturerId?: string;
   calibrationIntervalDays: number;
   lastCalibrationDate?: string;
-  location?: string;
+  locationId?: string;
   status:
     | "calibrated"
     | "due_calibration"
@@ -83,16 +84,21 @@ export function MetrologyForm({
   const [isLoading, setIsLoading] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [manufacturers, setManufacturers] = useState<Manufacturer[]>([]);
+  const [metrologyToolTypes, setMetrologyToolTypes] = useState<
+    MetrologyToolType[]
+  >([]);
   const metrologyService = new MetrologyService();
 
   const [formData, setFormData] = useState<FormData>({
     name: "",
-    type: "",
+    typeId: "",
     serialNumber: "",
-    manufacturer: "",
+    manufacturerId: "",
     calibrationIntervalDays: 365,
     lastCalibrationDate: "",
-    location: "",
+    locationId: "",
     status: "calibrated",
     imageUrl: "",
     notes: "",
@@ -105,18 +111,75 @@ export function MetrologyForm({
     } else if (initialData) {
       setFormData({
         name: initialData.name,
-        type: initialData.type,
+        typeId: initialData.typeId,
         serialNumber: initialData.serialNumber,
-        manufacturer: initialData.manufacturer || "",
+        manufacturerId: initialData.manufacturerId || "",
         calibrationIntervalDays: initialData.calibrationIntervalDays,
         lastCalibrationDate: initialData.lastCalibrationDate || "",
-        location: initialData.location || "",
+        locationId: initialData.locationId || "",
         status: initialData.status,
         imageUrl: initialData.imageUrl || "",
         notes: initialData.notes || "",
       });
     }
   }, [mode, toolId, initialData]);
+
+  // Load locations on component mount
+  useEffect(() => {
+    const loadLocations = async () => {
+      try {
+        const locationsData = await SettingsService.getLocations();
+        setLocations(locationsData);
+      } catch (error) {
+        console.error("Error loading locations:", error);
+        toast({
+          title: "Warning",
+          description: "Failed to load locations. Please refresh the page.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    loadLocations();
+  }, [toast]);
+
+  // Load manufacturers on component mount
+  useEffect(() => {
+    const loadManufacturers = async () => {
+      try {
+        const manufacturersData = await SettingsService.getManufacturers();
+        setManufacturers(manufacturersData);
+      } catch (error) {
+        console.error("Error loading manufacturers:", error);
+        toast({
+          title: "Warning",
+          description: "Failed to load manufacturers. Please refresh the page.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    loadManufacturers();
+  }, [toast]);
+
+  // Load metrology tool types on component mount
+  useEffect(() => {
+    const loadMetrologyToolTypes = async () => {
+      try {
+        const toolTypesData = await SettingsService.getMetrologyToolTypes();
+        setMetrologyToolTypes(toolTypesData);
+      } catch (error) {
+        console.error("Error loading metrology tool types:", error);
+        toast({
+          title: "Warning",
+          description: "Failed to load tool types. Please refresh the page.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    loadMetrologyToolTypes();
+  }, [toast]);
 
   const loadToolData = async () => {
     if (!toolId) return;
@@ -127,12 +190,12 @@ export function MetrologyForm({
       if (tool) {
         setFormData({
           name: tool.name,
-          type: tool.type,
+          typeId: tool.typeId,
           serialNumber: tool.serialNumber,
-          manufacturer: tool.manufacturer || "",
+          manufacturerId: tool.manufacturerId || "",
           calibrationIntervalDays: tool.calibrationIntervalDays,
           lastCalibrationDate: tool.lastCalibrationDate || "",
-          location: tool.location || "",
+          locationId: tool.locationId || "",
           status: tool.status,
           imageUrl: tool.imageUrl || "",
           notes: tool.notes || "",
@@ -193,13 +256,13 @@ export function MetrologyForm({
 
       const toolData = {
         name: formData.name,
-        type: formData.type,
+        typeId: formData.typeId,
         serialNumber: formData.serialNumber,
-        manufacturer: formData.manufacturer || undefined,
+        manufacturerId: formData.manufacturerId || undefined,
         calibrationIntervalDays: formData.calibrationIntervalDays,
         lastCalibrationDate: formData.lastCalibrationDate || undefined,
         nextCalibrationDate,
-        location: formData.location || undefined,
+        locationId: formData.locationId || undefined,
         status: formData.status,
         imageUrl: formData.imageUrl || undefined,
         notes: formData.notes || undefined,
@@ -324,17 +387,17 @@ export function MetrologyForm({
               <div className="space-y-2">
                 <Label htmlFor="type">Type *</Label>
                 <Select
-                  value={formData.type}
-                  onValueChange={(value) => handleInputChange("type", value)}
+                  value={formData.typeId}
+                  onValueChange={(value) => handleInputChange("typeId", value)}
                   required
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select tool type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {MOCK_TOOL_TYPES_METROLOGY.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
+                    {metrologyToolTypes.map((toolType) => (
+                      <SelectItem key={toolType.id} value={toolType.id}>
+                        {toolType.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -359,18 +422,18 @@ export function MetrologyForm({
               <div className="space-y-2">
                 <Label htmlFor="manufacturer">Manufacturer</Label>
                 <Select
-                  value={formData.manufacturer}
+                  value={formData.manufacturerId}
                   onValueChange={(value) =>
-                    handleInputChange("manufacturer", value)
+                    handleInputChange("manufacturerId", value)
                   }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select manufacturer" />
                   </SelectTrigger>
                   <SelectContent>
-                    {MOCK_MANUFACTURERS.map((manufacturer) => (
-                      <SelectItem key={manufacturer} value={manufacturer}>
-                        {manufacturer}
+                    {manufacturers.map((manufacturer) => (
+                      <SelectItem key={manufacturer.id} value={manufacturer.id}>
+                        {manufacturer.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -429,18 +492,18 @@ export function MetrologyForm({
               <div className="space-y-2">
                 <Label htmlFor="location">Location</Label>
                 <Select
-                  value={formData.location}
+                  value={formData.locationId}
                   onValueChange={(value) =>
-                    handleInputChange("location", value)
+                    handleInputChange("locationId", value)
                   }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select location" />
                   </SelectTrigger>
                   <SelectContent>
-                    {MOCK_LOCATIONS.map((location) => (
-                      <SelectItem key={location} value={location}>
-                        {location}
+                    {locations.map((location) => (
+                      <SelectItem key={location.id} value={location.id}>
+                        {location.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

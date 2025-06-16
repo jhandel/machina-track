@@ -6,12 +6,12 @@ import { z } from 'zod';
 // Validation schema for cutting tools
 const ConsumableSchema = z.object({
   name: z.string().min(1),
-  type: z.string().min(1),
-  material: z.string().optional(),
+  typeId: z.string().min(1),
+  materialId: z.string().optional(),
   size: z.string().optional(),
   quantity: z.number().int().min(0),
   minQuantity: z.number().int().min(0),
-  location: z.string().min(1),
+  locationId: z.string().min(1),
   toolLifeHours: z.number().optional(),
   remainingToolLifeHours: z.number().optional(),
   lastUsedDate: z.string().optional(),

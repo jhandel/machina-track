@@ -9,7 +9,14 @@ export class PrismaMetrologyToolRepository implements MetrologyToolRepository {
   async findById(id: string): Promise<MetrologyTool | null> {
       const prisma = await getPrismaClient();
     try {
-      const tool = await prisma.metrology_tools.findUnique({ where: { id } });
+      const tool = await prisma.metrology_tools.findUnique({ 
+        where: { id },
+        include: {
+          metrology_tool_types: true,
+          manufacturers: true,
+          locations: true,
+        },
+      });
       return tool ? this.mapToMetrologyTool(tool) : null;
     } catch (error) {
       throw new DatabaseError(`Failed to find metrology tool by id: ${error}`);
@@ -23,6 +30,11 @@ export class PrismaMetrologyToolRepository implements MetrologyToolRepository {
         skip: offset,
         take: limit,
         orderBy: { name: 'asc' },
+        include: {
+          metrology_tool_types: true,
+          manufacturers: true,
+          locations: true,
+        },
       });
       return tools.map(this.mapToMetrologyTool);
     } catch (error) {
@@ -37,16 +49,21 @@ export class PrismaMetrologyToolRepository implements MetrologyToolRepository {
         data: {
           id: uuidv4(),
           name: item.name,
-          type: item.type,
+          type_id: item.typeId,
           serial_number: item.serialNumber,
-          manufacturer: item.manufacturer ?? null,
+          manufacturer_id: item.manufacturerId ?? null,
           calibration_interval_days: item.calibrationIntervalDays,
           last_calibration_date: item.lastCalibrationDate ?? null,
           next_calibration_date: item.nextCalibrationDate ?? null,
-          location: item.location ?? null,
+          location_id: item.locationId ?? null,
           status: item.status,
           image_url: item.imageUrl ?? null,
           notes: item.notes ?? null,
+        },
+        include: {
+          metrology_tool_types: true,
+          manufacturers: true,
+          locations: true,
         },
       });
       return this.mapToMetrologyTool(created);
@@ -62,16 +79,21 @@ export class PrismaMetrologyToolRepository implements MetrologyToolRepository {
         where: { id },
         data: {
           name: item.name,
-          type: item.type,
+          type_id: item.typeId,
           serial_number: item.serialNumber,
-          manufacturer: item.manufacturer,
+          manufacturer_id: item.manufacturerId,
           calibration_interval_days: item.calibrationIntervalDays,
           last_calibration_date: item.lastCalibrationDate,
           next_calibration_date: item.nextCalibrationDate,
-          location: item.location,
+          location_id: item.locationId,
           status: item.status,
           image_url: item.imageUrl,
           notes: item.notes,
+        },
+        include: {
+          metrology_tool_types: true,
+          manufacturers: true,
+          locations: true,
         },
       });
       return this.mapToMetrologyTool(updated);
@@ -111,6 +133,11 @@ export class PrismaMetrologyToolRepository implements MetrologyToolRepository {
       const tools = await prisma.metrology_tools.findMany({
         where: { status },
         orderBy: { name: 'asc' },
+        include: {
+          metrology_tool_types: true,
+          manufacturers: true,
+          locations: true,
+        },
       });
       return tools.map(this.mapToMetrologyTool);
     } catch (error) {
@@ -128,6 +155,11 @@ export class PrismaMetrologyToolRepository implements MetrologyToolRepository {
           status: { not: 'out_of_service' },
         },
         orderBy: { next_calibration_date: 'asc' },
+        include: {
+          metrology_tool_types: true,
+          manufacturers: true,
+          locations: true,
+        },
       });
       return tools.map(this.mapToMetrologyTool);
     } catch (error) {
@@ -145,6 +177,11 @@ export class PrismaMetrologyToolRepository implements MetrologyToolRepository {
           status: { not: 'out_of_service' },
         },
         orderBy: { next_calibration_date: 'asc' },
+        include: {
+          metrology_tool_types: true,
+          manufacturers: true,
+          locations: true,
+        },
       });
       return tools.map(this.mapToMetrologyTool);
     } catch (error) {
@@ -155,7 +192,14 @@ export class PrismaMetrologyToolRepository implements MetrologyToolRepository {
   async findBySerialNumber(serialNumber: string): Promise<MetrologyTool | null> {
       const prisma = await getPrismaClient();
     try {
-      const tool = await prisma.metrology_tools.findFirst({ where: { serial_number: serialNumber } });
+      const tool = await prisma.metrology_tools.findFirst({ 
+        where: { serial_number: serialNumber },
+        include: {
+          metrology_tool_types: true,
+          manufacturers: true,
+          locations: true,
+        },
+      });
       return tool ? this.mapToMetrologyTool(tool) : null;
     } catch (error) {
       throw new DatabaseError(`Failed to find metrology tool by serial number: ${error}`);
@@ -169,12 +213,17 @@ export class PrismaMetrologyToolRepository implements MetrologyToolRepository {
         where: {
           OR: [
             { name: { contains: query } },
-            { type: { contains: query } },
+            { metrology_tool_types: { name: { contains: query } } },
             { serial_number: { contains: query } },
             { notes: { contains: query } },
           ],
         },
         orderBy: { name: 'asc' },
+        include: {
+          metrology_tool_types: true,
+          manufacturers: true,
+          locations: true,
+        },
       });
       return tools.map(this.mapToMetrologyTool);
     } catch (error) {
@@ -186,14 +235,17 @@ export class PrismaMetrologyToolRepository implements MetrologyToolRepository {
     return {
       id: row.id,
       name: row.name,
-      type: row.type,
+      typeId: row.type_id,
+      type: row.metrology_tool_types?.name,
       serialNumber: row.serial_number,
-      manufacturer: row.manufacturer ?? undefined,
+      manufacturerId: row.manufacturer_id,
+      manufacturer: row.manufacturers?.name,
       calibrationIntervalDays: row.calibration_interval_days,
       lastCalibrationDate: row.last_calibration_date ?? undefined,
       nextCalibrationDate: row.next_calibration_date ?? undefined,
       calibrationLogIds: [], // Not implemented: join with calibration_logs if needed
-      location: row.location ?? undefined,
+      locationId: row.location_id,
+      location: row.locations?.name,
       status: row.status,
       imageUrl: row.image_url ?? undefined,
       notes: row.notes ?? undefined,

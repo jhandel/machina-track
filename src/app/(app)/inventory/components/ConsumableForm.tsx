@@ -22,16 +22,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  MOCK_LOCATIONS,
-  MOCK_TOOL_TYPES_CUTTING,
-  MOCK_MATERIALS_CUTTING,
-} from "@/lib/constants";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { ConsumableService } from "@/services/consumable-service";
+import { SettingsService } from "@/services/settings-service";
 import type { Consumable } from "@/lib/types";
+import type {
+  Location,
+  ConsumableType,
+  ConsumableMaterial,
+} from "@/lib/database/interfaces";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,12 +55,12 @@ interface ConsumableFormProps {
 
 interface FormData {
   name: string;
-  type: string;
-  material?: string;
+  typeId: string;
+  materialId?: string;
   size?: string;
   quantity: number;
   minQuantity: number;
-  location: string;
+  locationId: string;
   toolLifeHours?: number;
   remainingToolLifeHours?: number;
   supplier?: string;
@@ -79,23 +80,87 @@ export function ConsumableForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [consumableTypes, setConsumableTypes] = useState<ConsumableType[]>([]);
+  const [consumableMaterials, setConsumableMaterials] = useState<
+    ConsumableMaterial[]
+  >([]);
 
   const consumableService = new ConsumableService();
 
   const [formData, setFormData] = useState<FormData>({
     name: initialData?.name || "",
-    type: initialData?.type || "",
-    material: initialData?.material || "",
+    typeId: initialData?.typeId || "",
+    materialId: initialData?.materialId || "",
     size: initialData?.size || "",
     quantity: initialData?.quantity || 0,
     minQuantity: initialData?.minQuantity || 0,
-    location: initialData?.location || "",
+    locationId: initialData?.locationId || "",
     toolLifeHours: initialData?.toolLifeHours || undefined,
     remainingToolLifeHours: initialData?.remainingToolLifeHours || undefined,
     supplier: initialData?.supplier || "",
     imageUrl: initialData?.imageUrl || "https://placehold.co/400x400.png",
     notes: initialData?.notes || "",
   });
+
+  // Load locations on component mount
+  useEffect(() => {
+    const loadLocations = async () => {
+      try {
+        const locationsData = await SettingsService.getLocations();
+        setLocations(locationsData);
+      } catch (error) {
+        console.error("Error loading locations:", error);
+        toast({
+          title: "Warning",
+          description: "Failed to load locations. Please refresh the page.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    loadLocations();
+  }, [toast]);
+
+  // Load consumable types on component mount
+  useEffect(() => {
+    const loadConsumableTypes = async () => {
+      try {
+        const typesData = await SettingsService.getConsumableTypes();
+        setConsumableTypes(typesData);
+      } catch (error) {
+        console.error("Error loading consumable types:", error);
+        toast({
+          title: "Warning",
+          description:
+            "Failed to load consumable types. Please refresh the page.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    loadConsumableTypes();
+  }, [toast]);
+
+  // Load consumable materials on component mount
+  useEffect(() => {
+    const loadConsumableMaterials = async () => {
+      try {
+        const materialsData = await SettingsService.getConsumableMaterials();
+        setConsumableMaterials(materialsData);
+      } catch (error) {
+        console.error("Error loading consumable materials:", error);
+        toast({
+          title: "Warning",
+          description:
+            "Failed to load consumable materials. Please refresh the page.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    loadConsumableMaterials();
+  }, [toast]);
 
   const handleInputChange = (
     field: keyof FormData,
@@ -195,17 +260,17 @@ export function ConsumableForm({
           <div className="space-y-2">
             <Label htmlFor="type">Tool Type</Label>
             <Select
-              value={formData.type}
-              onValueChange={(value) => handleInputChange("type", value)}
+              value={formData.typeId}
+              onValueChange={(value) => handleInputChange("typeId", value)}
               required
             >
               <SelectTrigger id="type">
                 <SelectValue placeholder="Select tool type" />
               </SelectTrigger>
               <SelectContent>
-                {MOCK_TOOL_TYPES_CUTTING.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {type}
+                {consumableTypes.map((type) => (
+                  <SelectItem key={type.id} value={type.id}>
+                    {type.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -215,16 +280,16 @@ export function ConsumableForm({
           <div className="space-y-2">
             <Label htmlFor="material">Material</Label>
             <Select
-              value={formData.material || ""}
-              onValueChange={(value) => handleInputChange("material", value)}
+              value={formData.materialId || ""}
+              onValueChange={(value) => handleInputChange("materialId", value)}
             >
               <SelectTrigger id="material">
                 <SelectValue placeholder="Select material" />
               </SelectTrigger>
               <SelectContent>
-                {MOCK_MATERIALS_CUTTING.map((mat) => (
-                  <SelectItem key={mat} value={mat}>
-                    {mat}
+                {consumableMaterials.map((material) => (
+                  <SelectItem key={material.id} value={material.id}>
+                    {material.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -274,17 +339,17 @@ export function ConsumableForm({
           <div className="space-y-2">
             <Label htmlFor="location">Storage Location</Label>
             <Select
-              value={formData.location}
-              onValueChange={(value) => handleInputChange("location", value)}
+              value={formData.locationId}
+              onValueChange={(value) => handleInputChange("locationId", value)}
               required
             >
               <SelectTrigger id="location">
                 <SelectValue placeholder="Select location" />
               </SelectTrigger>
               <SelectContent>
-                {MOCK_LOCATIONS.map((loc) => (
-                  <SelectItem key={loc} value={loc}>
-                    {loc}
+                {locations.map((location) => (
+                  <SelectItem key={location.id} value={location.id}>
+                    {location.name}
                   </SelectItem>
                 ))}
               </SelectContent>
