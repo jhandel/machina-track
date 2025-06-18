@@ -26,8 +26,14 @@ import { MAINTENANCE_STATUSES } from "@/lib/constants";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import { MaintenanceService } from "@/services/maintenance-service";
-import { EquipmentService } from "@/services/equipment-service";
+import {
+  MaintenanceService,
+  maintenanceService,
+} from "@/services/maintenance-service";
+import {
+  EquipmentService,
+  equipmentService,
+} from "@/services/equipment-service";
 import type { MaintenanceTask, Equipment } from "@/lib/types";
 import {
   AlertDialog,
@@ -90,8 +96,7 @@ export function MaintenanceForm({
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  const maintenanceService = new MaintenanceService();
-  const equipmentService = new EquipmentService();
+  // Services are imported as singletons at the top
 
   // Load equipment list
   useEffect(() => {

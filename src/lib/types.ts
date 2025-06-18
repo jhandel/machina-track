@@ -81,7 +81,8 @@ export interface MaintenanceTask {
 
 export interface ServiceRecord {
   id: string;
-  maintenanceTaskId: string;
+  maintenanceTaskId?: string;  // Made optional
+  equipmentId?: string;        // Added equipment ID
   date: string; // ISO date string
   performedBy: string;
   descriptionOfWork: string;

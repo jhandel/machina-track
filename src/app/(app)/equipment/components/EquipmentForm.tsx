@@ -1,8 +1,8 @@
 // src/components/equipment/EquipmentForm.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Save, ArrowLeft } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Save, ArrowLeft, Upload, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -30,6 +30,7 @@ import { EquipmentService } from "@/services/equipment-service";
 import { SettingsService } from "@/services/settings-service";
 import type { Equipment } from "@/lib/types";
 import type { Location } from "@/lib/database/interfaces";
+import Image from "next/image";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -90,6 +91,14 @@ export function EquipmentForm({
     notes: initialData?.notes || "",
   });
 
+  const [isUploading, setIsUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    formData.imageUrl || null
+  );
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
+
   const equipmentService = new EquipmentService();
 
   // Load locations on component mount
@@ -114,6 +123,126 @@ export function EquipmentForm({
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setIsDirty(true);
+  };
+
+  const processFile = async (file: File) => {
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Error",
+        description: "Only image files are allowed",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      toast({
+        title: "Error",
+        description: "Image file size must be less than 5MB",
+        variant: "destructive",
+      });
+
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      return;
+    }
+
+    // Show preview immediately
+    const localPreview = URL.createObjectURL(file);
+    setImagePreview(localPreview);
+    setIsDirty(true);
+
+    try {
+      setIsUploading(true);
+
+      // Create form data
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // Upload the file
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to upload image");
+      }
+
+      // Update form data with the new image URL
+      handleInputChange("imageUrl", result.data.url);
+
+      toast({
+        title: "Success",
+        description: "Image uploaded successfully",
+      });
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to upload image",
+        variant: "destructive",
+      });
+
+      // Reset preview on error
+      if (formData.imageUrl) {
+        setImagePreview(formData.imageUrl);
+      } else {
+        setImagePreview(null);
+      }
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleFileSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      await processFile(file);
+    }
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = "copy";
+    setIsDragging(true);
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      await processFile(file);
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -317,13 +446,111 @@ export function EquipmentForm({
               />
             </div>
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="imageUrl">Image URL</Label>
-              <Input
-                id="imageUrl"
-                value={formData.imageUrl}
-                onChange={(e) => handleInputChange("imageUrl", e.target.value)}
-                placeholder="https://placehold.co/600x400.png"
-              />
+              <Label htmlFor="imageUrl">Equipment Image</Label>
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center gap-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="w-full"
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    {isUploading ? "Uploading..." : "Upload Image"}
+                  </Button>
+                  <Input
+                    id="imageUrl"
+                    value={formData.imageUrl}
+                    onChange={(e) =>
+                      handleInputChange("imageUrl", e.target.value)
+                    }
+                    placeholder="Or enter image URL directly"
+                    className="w-full"
+                  />
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleFileSelect}
+                    aria-label="Upload equipment image"
+                    title="Select an image for the equipment"
+                  />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Supported image formats: JPG, PNG, GIF, SVG. Maximum file
+                  size: 5MB. You can drag and drop an image directly into the
+                  area below.
+                </p>
+                {imagePreview && (
+                  <div className="relative h-64 w-full">
+                    <Image
+                      src={imagePreview}
+                      alt="Equipment preview"
+                      fill
+                      className="object-contain rounded-md border"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="absolute top-2 right-2 bg-background opacity-80 hover:opacity-100"
+                      onClick={() => {
+                        setImagePreview(null);
+                        handleInputChange("imageUrl", "");
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = "";
+                        }
+                      }}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-4 w-4"
+                      >
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                      <span className="sr-only">Remove image</span>
+                    </Button>
+                  </div>
+                )}
+                {!imagePreview && (
+                  <div
+                    ref={dropZoneRef}
+                    className={`h-64 w-full flex items-center justify-center border border-dashed rounded-md transition-colors cursor-pointer ${
+                      isDragging
+                        ? "bg-primary/10 border-primary"
+                        : "border-border hover:border-primary/50 hover:bg-secondary/50"
+                    }`}
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragEnter={handleDragEnter}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Drag and drop an image here, or click to upload"
+                  >
+                    <div className="text-center p-4">
+                      <ImageIcon className="mx-auto h-12 w-12 text-gray-400" />
+                      <p className="mt-2 text-sm text-gray-500">
+                        {isDragging
+                          ? "Drop image here"
+                          : "Drag and drop an image here, or click to upload"}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="notes">Notes</Label>

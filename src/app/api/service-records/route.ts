@@ -51,11 +51,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // Validate required fields
-    if (!body.maintenanceTaskId || !body.date || !body.performedBy || !body.descriptionOfWork) {
+    if ((!body.maintenanceTaskId && !body.equipmentId) || !body.date || !body.performedBy || !body.descriptionOfWork) {
       return NextResponse.json(
         { 
           success: false, 
-          error: 'Missing required fields: maintenanceTaskId, date, performedBy, descriptionOfWork' 
+          error: 'Missing required fields: either maintenanceTaskId or equipmentId is required, plus date, performedBy, descriptionOfWork' 
         },
         { status: 400 }
       );

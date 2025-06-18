@@ -33,17 +33,33 @@ export class PrismaServiceRecordRepository implements ServiceRecordRepository {
   async create(item: Omit<ServiceRecord, 'id'>): Promise<ServiceRecord> {
       const prisma = await getPrismaClient();
     try {
-      const created = await prisma.service_records.create({
-        data: {
-          id: uuidv4(),
-          maintenance_task_id: item.maintenanceTaskId,
-          date: item.date,
-          performed_by: item.performedBy,
-          description_of_work: item.descriptionOfWork,
-          cost: item.cost ?? null,
-          notes: item.notes ?? null,
-        },
-      });
+      // Validate: either maintenanceTaskId or equipmentId must be provided
+      if (!item.maintenanceTaskId && !item.equipmentId) {
+        throw new Error('Either maintenanceTaskId or equipmentId must be provided');
+      }
+      
+      // Map from our domain model to Prisma's expected format
+      const data: any = {
+        id: uuidv4(),
+        date: item.date,
+        performed_by: item.performedBy,
+        description_of_work: item.descriptionOfWork,
+        notes: item.notes,
+      };
+      
+      if (item.maintenanceTaskId) {
+        data.maintenance_task_id = item.maintenanceTaskId;
+      }
+      
+      if (item.equipmentId) {
+        data.equipment_id = item.equipmentId;
+      }
+      
+      if (item.cost !== undefined) {
+        data.cost = item.cost;
+      }
+      
+      const created = await prisma.service_records.create({ data });
       return this.mapToServiceRecord(created);
     } catch (error: any) {
       throw new DatabaseError(`Failed to create service record: ${error.message}`);
@@ -53,16 +69,40 @@ export class PrismaServiceRecordRepository implements ServiceRecordRepository {
   async update(id: string, item: Partial<ServiceRecord>): Promise<ServiceRecord | null> {
       const prisma = await getPrismaClient();
     try {
+      // Map from our domain model to Prisma's expected format
+      const data: any = {};
+      
+      if (item.maintenanceTaskId !== undefined) {
+        data.maintenance_task_id = item.maintenanceTaskId;
+      }
+      
+      if (item.equipmentId !== undefined) {
+        data.equipment_id = item.equipmentId;
+      }
+      
+      if (item.date !== undefined) {
+        data.date = item.date;
+      }
+      
+      if (item.performedBy !== undefined) {
+        data.performed_by = item.performedBy;
+      }
+      
+      if (item.descriptionOfWork !== undefined) {
+        data.description_of_work = item.descriptionOfWork;
+      }
+      
+      if (item.cost !== undefined) {
+        data.cost = item.cost;
+      }
+      
+      if (item.notes !== undefined) {
+        data.notes = item.notes;
+      }
+      
       const updated = await prisma.service_records.update({
         where: { id },
-        data: {
-          maintenance_task_id: item.maintenanceTaskId,
-          date: item.date,
-          performed_by: item.performedBy,
-          description_of_work: item.descriptionOfWork,
-          cost: item.cost,
-          notes: item.notes,
-        },
+        data
       });
       return this.mapToServiceRecord(updated);
     } catch (error: any) {
@@ -142,8 +182,17 @@ export class PrismaServiceRecordRepository implements ServiceRecordRepository {
   async findByEquipmentId(equipmentId: string): Promise<ServiceRecord[]> {
       const prisma = await getPrismaClient();
     try {
+      // Get service records directly associated with the equipment or indirectly through maintenance tasks
+      // Using any type to override Prisma's type checking
+      const whereCondition: any = {
+        OR: [
+          { equipment_id: equipmentId },
+          { maintenance_tasks: { equipment_id: equipmentId } }
+        ]
+      };
+      
       const records = await prisma.service_records.findMany({
-        where: { maintenance_tasks: { equipment_id: equipmentId } },
+        where: whereCondition,
         orderBy: { date: 'desc' },
         include: { maintenance_tasks: true },
       });
@@ -156,7 +205,8 @@ export class PrismaServiceRecordRepository implements ServiceRecordRepository {
   private mapToServiceRecord(row: any): ServiceRecord {
     return {
       id: row.id,
-      maintenanceTaskId: row.maintenance_task_id,
+      maintenanceTaskId: row.maintenance_task_id ?? undefined,
+      equipmentId: row.equipment_id ?? undefined,
       date: row.date,
       performedBy: row.performed_by,
       descriptionOfWork: row.description_of_work,

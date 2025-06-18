@@ -65,3 +65,6 @@ export class ServiceRecordService {
     return this.getAll({ equipmentId });
   }
 }
+
+// Export singleton instance
+export const serviceRecordService = new ServiceRecordService();
