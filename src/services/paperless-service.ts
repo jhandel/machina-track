@@ -7,9 +7,9 @@ import {
     PAPERLESS_NGX_URL,
     PAPERLESS_NGX_USERNAME,
     PAPERLESS_NGX_PASSWORD,
-    PAPERLESS_CALIBRATION_TAG_ID,
     DOCUMENT_STORAGE_TYPE,
-    PAPERLESS_NGX_ENABLED
+    PAPERLESS_NGX_ENABLED,
+    DEBUG_API
 } from '@/lib/config';
 
 // Interface for task response
@@ -31,6 +31,102 @@ let globalTokenCache: TokenCache | null = null;
 
 // Token expiration time in milliseconds (default: 1 hour)
 const TOKEN_EXPIRATION_MS = 60 * 60 * 1000;
+
+// API call instrumentation interface
+interface ApiCallMetrics {
+    method: string;
+    url: string;
+    duration: number;
+    status?: number;
+    statusText?: string;
+    error?: string;
+    requestSize?: number;
+    responseSize?: number;
+}
+
+// Helper function to instrument API calls
+async function instrumentedFetch(
+    url: string,
+    options: RequestInit = {},
+    description?: string
+): Promise<Response> {
+    const startTime = performance.now();
+    const method = options.method || 'GET';
+
+    // Calculate request size if body exists
+    let requestSize = 0;
+    if (options.body) {
+        if (typeof options.body === 'string') {
+            requestSize = new Blob([options.body]).size;
+        } else if (options.body instanceof FormData) {
+            // Approximate size for FormData (harder to measure exactly)
+            requestSize = -1; // Will show as "FormData" in logs
+        }
+    }
+
+    if (DEBUG_API) {
+        console.log(`🚀 [Paperless API] Starting ${method} ${url}${description ? ` (${description})` : ''}`);
+    }
+
+    try {
+        const response = await fetch(url, options);
+        const endTime = performance.now();
+        const duration = Math.round(endTime - startTime);
+
+        // Try to get response size from content-length header
+        const contentLength = response.headers.get('content-length');
+        const responseSize = contentLength ? parseInt(contentLength) : undefined;
+
+        const metrics: ApiCallMetrics = {
+            method,
+            url,
+            duration,
+            status: response.status,
+            statusText: response.statusText,
+            requestSize,
+            responseSize
+        };
+
+        // Log the result with performance metrics
+        const sizeInfo = responseSize ? ` (${(responseSize / 1024).toFixed(1)}KB)` : '';
+        const reqSizeInfo = requestSize === -1 ? ' [FormData]' : requestSize ? ` [${(requestSize / 1024).toFixed(1)}KB]` : '';
+
+        if (DEBUG_API) {
+            if (response.ok) {
+                console.log(`✅ [Paperless API] ${method} ${url} - ${duration}ms - ${response.status}${sizeInfo}${reqSizeInfo}${description ? ` (${description})` : ''}`);
+            } else {
+                console.warn(`⚠️ [Paperless API] ${method} ${url} - ${duration}ms - ${response.status} ${response.statusText}${sizeInfo}${reqSizeInfo}${description ? ` (${description})` : ''}`);
+            }
+        }
+
+        // Always log slow requests (over 2 seconds) regardless of DEBUG_API flag
+        if (duration > 2000) {
+            console.warn(`🐌 [Paperless API] SLOW REQUEST DETECTED: ${method} ${url} took ${duration}ms${description ? ` (${description})` : ''}`, {
+                metrics,
+                headers: Object.fromEntries(response.headers.entries())
+            });
+        }
+
+        return response;
+    } catch (error) {
+        const endTime = performance.now();
+        const duration = Math.round(endTime - startTime);
+
+        const metrics: ApiCallMetrics = {
+            method,
+            url,
+            duration,
+            error: error instanceof Error ? error.message : 'Unknown error',
+            requestSize
+        };
+
+        console.error(`❌ [Paperless API] ${method} ${url} - FAILED after ${duration}ms${description ? ` (${description})` : ''}`,
+            DEBUG_API ? { error, metrics } : { error: error instanceof Error ? error.message : 'Unknown error' }
+        );
+
+        throw error;
+    }
+}
 
 export class PaperlessService {
     private baseUrl: string;
@@ -62,8 +158,8 @@ export class PaperlessService {
         }
 
         try {
-            // Use the fetch API that works in both client and server components
-            const response = await fetch(`${this.baseUrl}/api/token/`, {
+            // Use the instrumented fetch API that works in both client and server components
+            const response = await instrumentedFetch(`${this.baseUrl}/api/token/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -72,7 +168,7 @@ export class PaperlessService {
                     username: PAPERLESS_NGX_USERNAME,
                     password: PAPERLESS_NGX_PASSWORD,
                 }),
-            });
+            }, 'Authentication');
 
             if (!response.ok) {
                 throw new Error(`Authentication failed: ${response.statusText}`);
@@ -106,12 +202,12 @@ export class PaperlessService {
     private async checkTaskStatus(taskId: string): Promise<TaskResponse> {
         const token = await this.getToken();
 
-        const response = await fetch(`${this.baseUrl}/api/tasks/?task_id=${taskId}`, {
+        const response = await instrumentedFetch(`${this.baseUrl}/api/tasks/?task_id=${taskId}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Token ${token}`,
             },
-        });
+        }, `Task Status Check - ${taskId.substring(0, 8)}...`);
 
         if (!response.ok) {
             throw new Error(`Task status check failed: ${response.statusText}`);
@@ -240,14 +336,14 @@ export class PaperlessService {
             // Start progress at 50
             if (onProgress) onProgress(50);
             formData.append('document', file);
-            // Use node-fetch in server components
-            const uploadResponse = await fetch(`${this.baseUrl}/api/documents/post_document/`, {
+            // Use instrumented fetch in server components
+            const uploadResponse = await instrumentedFetch(`${this.baseUrl}/api/documents/post_document/`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Token ${token}`,
                 },
                 body: formData,
-            });
+            }, `Document Upload - ${metadata.title || file.name}`);
 
             // Show progress at 75%
             if (onProgress) onProgress(75);
@@ -263,13 +359,13 @@ export class PaperlessService {
 
             //lets tell paperless-ngx to process the document
             const task = this.checkTaskStatus(taskIdCleaned);
-            const kickoff = await fetch(`${this.baseUrl}/api/tasks/run/${taskIdCleaned}/`, {
+            const kickoff = await instrumentedFetch(`${this.baseUrl}/api/tasks/run/${taskIdCleaned}/`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Token ${token}`,
                 },
                 body: JSON.stringify(task),
-            });
+            }, `Task Kickoff - ${taskIdCleaned.substring(0, 8)}...`);
 
             // Wait for the document to be processed
             const documentId = await this.waitForTaskCompletion(
@@ -298,14 +394,14 @@ export class PaperlessService {
                 };
                 var body = JSON.stringify(bulkUpdateData);
                 console.log('Bulk update data:', body);
-                const customFieldsResponse = await fetch(`${this.baseUrl}/api/documents/bulk_edit/`, {
+                const customFieldsResponse = await instrumentedFetch(`${this.baseUrl}/api/documents/bulk_edit/`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Token ${token}`,
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(bulkUpdateData),
-                });
+                }, 'Custom Fields Bulk Update');
 
                 if (!customFieldsResponse.ok) {
                     console.error('Custom fields update failed:', await customFieldsResponse.text());
@@ -421,13 +517,13 @@ export class PaperlessService {
             formData.append('document', file);
 
             // Upload the document
-            const uploadResponse = await fetch(`${this.baseUrl}/api/documents/post_document/`, {
+            const uploadResponse = await instrumentedFetch(`${this.baseUrl}/api/documents/post_document/`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Token ${token}`,
                 },
                 body: formData,
-            });
+            }, `Document Upload (Detailed Progress) - ${metadata.title || file.name}`);
 
             onProgress?.('uploading', 40, 'File uploaded, initiating processing...', {
                 currentStep: 'Upload Complete',
@@ -449,12 +545,12 @@ export class PaperlessService {
             });
 
             // Trigger task processing
-            await fetch(`${this.baseUrl}/api/tasks/run/${taskIdCleaned}/`, {
+            await instrumentedFetch(`${this.baseUrl}/api/tasks/run/${taskIdCleaned}/`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Token ${token}`,
                 },
-            });
+            }, `Task Kickoff (Detailed Progress) - ${taskIdCleaned.substring(0, 8)}...`);
 
             // Wait for the document to be processed with detailed progress
             const documentId = await this.waitForTaskCompletionWithProgress(
@@ -480,14 +576,14 @@ export class PaperlessService {
                     },
                 };
 
-                const customFieldsResponse = await fetch(`${this.baseUrl}/api/documents/bulk_edit/`, {
+                const customFieldsResponse = await instrumentedFetch(`${this.baseUrl}/api/documents/bulk_edit/`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Token ${token}`,
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(bulkUpdateData),
-                });
+                }, 'Custom Fields Bulk Update (Detailed Progress)');
 
                 if (!customFieldsResponse.ok) {
                     console.error('Custom fields update failed:', await customFieldsResponse.text());
@@ -605,13 +701,13 @@ export class PaperlessService {
         try {
             const token = await this.getToken();
 
-            // Use the fetch API that works in both client and server components
-            const response = await fetch(`${this.baseUrl}/api/documents/?query=${encodeURIComponent(query)}`, {
+            // Use the instrumented fetch API that works in both client and server components
+            const response = await instrumentedFetch(`${this.baseUrl}/api/documents/?query=${encodeURIComponent(query)}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Token ${token}`,
                 },
-            });
+            }, `Document Search - "${query}"`);
 
             if (!response.ok) {
                 throw new Error(`Document search failed: ${response.statusText}`);
@@ -635,12 +731,12 @@ export class PaperlessService {
             const token = await this.getToken();
 
             // First, try to find the document type
-            const searchResponse = await fetch(`${this.baseUrl}/api/document_types/?name__iexact=${encodeURIComponent(name)}`, {
+            const searchResponse = await instrumentedFetch(`${this.baseUrl}/api/document_types/?name__iexact=${encodeURIComponent(name)}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Token ${token}`,
                 },
-            });
+            }, `Document Type Search - "${name}"`);
 
             if (!searchResponse.ok) {
                 throw new Error(`Document type search failed: ${searchResponse.statusText}`);
@@ -654,7 +750,7 @@ export class PaperlessService {
             }
 
             // If not found, create a new document type
-            const createResponse = await fetch(`${this.baseUrl}/api/document_types/`, {
+            const createResponse = await instrumentedFetch(`${this.baseUrl}/api/document_types/`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Token ${token}`,
@@ -665,7 +761,7 @@ export class PaperlessService {
                     matching_algorithm: 0, // Default algorithm: Any
                     is_insensitive: true
                 }),
-            });
+            }, `Document Type Creation - "${name}"`);
 
             if (!createResponse.ok) {
                 throw new Error(`Document type creation failed: ${createResponse.statusText}`);
@@ -689,12 +785,12 @@ export class PaperlessService {
             const token = await this.getToken();
 
             // First, try to find the custom field
-            const searchResponse = await fetch(`${this.baseUrl}/api/custom_fields/?name__iexact=${encodeURIComponent(name)}`, {
+            const searchResponse = await instrumentedFetch(`${this.baseUrl}/api/custom_fields/?name__iexact=${encodeURIComponent(name)}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Token ${token}`,
                 },
-            });
+            }, `Custom Field Search - "${name}"`);
 
             if (!searchResponse.ok) {
                 throw new Error(`Custom field search failed: ${searchResponse.statusText}`);
@@ -709,7 +805,7 @@ export class PaperlessService {
 
             // If not found, create a new custom field
             // Note: We default to text field type (0), but you might want to customize this
-            const createResponse = await fetch(`${this.baseUrl}/api/custom_fields/`, {
+            const createResponse = await instrumentedFetch(`${this.baseUrl}/api/custom_fields/`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Token ${token}`,
@@ -719,7 +815,7 @@ export class PaperlessService {
                     name: name,
                     data_type: "string"
                 }),
-            });
+            }, `Custom Field Creation - "${name}"`);
 
             if (!createResponse.ok) {
                 throw new Error(`Custom field creation failed: ${createResponse.statusText}`);
@@ -743,12 +839,12 @@ export class PaperlessService {
             const token = await this.getToken();
 
             // First, try to find the tag
-            const searchResponse = await fetch(`${this.baseUrl}/api/tags/?name__iexact=${encodeURIComponent(name)}`, {
+            const searchResponse = await instrumentedFetch(`${this.baseUrl}/api/tags/?name__iexact=${encodeURIComponent(name)}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Token ${token}`,
                 },
-            });
+            }, `Tag Search - "${name}"`);
 
             if (!searchResponse.ok) {
                 throw new Error(`Tag search failed: ${searchResponse.statusText}`);
@@ -765,7 +861,7 @@ export class PaperlessService {
             // Generate a random color if one isn't provided
             const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
             console.log(`Creating new tag "${name}" with color ${randomColor}`);
-            const createResponse = await fetch(`${this.baseUrl}/api/tags/`, {
+            const createResponse = await instrumentedFetch(`${this.baseUrl}/api/tags/`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Token ${token}`,
@@ -778,7 +874,7 @@ export class PaperlessService {
                     matching_algorithm: 0, // 0: Any, 1: All, 2: Literal, 3: Regular expression, 4: Fuzzy match
                     is_insensitive: true,
                 }),
-            });
+            }, `Tag Creation - "${name}"`);
 
             if (!createResponse.ok) {
                 throw new Error(`Tag creation failed: ${createResponse.statusText}`);
@@ -804,12 +900,12 @@ export class PaperlessService {
         try {
             const token = await this.getToken();
 
-            const response = await fetch(`${this.baseUrl}/api/documents/${documentId}/`, {
+            const response = await instrumentedFetch(`${this.baseUrl}/api/documents/${documentId}/`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Token ${token}`,
                 },
-            });
+            }, `Document Details - ID ${documentId}`);
 
             if (!response.ok) {
                 throw new Error(`Document retrieval failed: ${response.statusText}`);
@@ -840,12 +936,12 @@ export class PaperlessService {
             const customFieldQuery = JSON.stringify([fieldName, "exact", fieldValue]);
             const queryParam = `custom_field_query=${encodeURIComponent(customFieldQuery)}`;
 
-            const response = await fetch(`${this.baseUrl}/api/documents/?${queryParam}`, {
+            const response = await instrumentedFetch(`${this.baseUrl}/api/documents/?${queryParam}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Token ${token}`,
                 },
-            });
+            }, `Documents by Custom Field - "${fieldName}": "${fieldValue}"`);
 
             if (!response.ok) {
                 throw new Error(`Document search failed: ${response.statusText}`);
@@ -871,12 +967,12 @@ export class PaperlessService {
         try {
             const token = await this.getToken();
 
-            const response = await fetch(`${this.baseUrl}/api/documents/${documentId}/`, {
+            const response = await instrumentedFetch(`${this.baseUrl}/api/documents/${documentId}/`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Token ${token}`,
                 },
-            });
+            }, `Document Deletion - ID ${documentId}`);
 
             if (!response.ok) {
                 throw new Error(`Document deletion failed: ${response.statusText}`);
