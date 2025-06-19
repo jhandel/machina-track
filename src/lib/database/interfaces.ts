@@ -49,6 +49,7 @@ export interface CalibrationLogRepository extends BaseRepository<CalibrationLog>
   findByToolId(toolId: string): Promise<CalibrationLog[]>;
   findByDateRange(startDate: string, endDate: string): Promise<CalibrationLog[]>;
   findByPerformer(performedBy: string): Promise<CalibrationLog[]>;
+  findByResult(result: string): Promise<CalibrationLog[]>;
 }
 
 /**

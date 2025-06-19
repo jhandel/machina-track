@@ -29,6 +29,9 @@ export { ServiceRecordService } from './service-record-service';
 // Machine Log Service  
 export { MachineLogService } from './machine-log-service';
 
+// Paperless Service
+export { PaperlessService, paperlessService } from './paperless-service';
+
 // Re-export types from lib for convenience
 export type { 
   Equipment, 

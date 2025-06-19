@@ -1,0 +1,26 @@
+.progress-bar {
+  width: 100%;
+  background-color: rgb(229, 231, 235);
+  border-radius: 9999px;
+  height: 0.625rem;
+  margin-top: 0.5rem;
+}
+
+.progress-bar-fill {
+  background-color: hsl(var(--primary));
+  height: 0.625rem;
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}
+
+/* Progress percentage classes */
+.progress-10 { width: 10%; }
+.progress-20 { width: 20%; }
+.progress-30 { width: 30%; }
+.progress-40 { width: 40%; }
+.progress-50 { width: 50%; }
+.progress-60 { width: 60%; }
+.progress-70 { width: 70%; }
+.progress-80 { width: 80%; }
+.progress-90 { width: 90%; }
+.progress-100 { width: 100%; }

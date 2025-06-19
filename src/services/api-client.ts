@@ -111,45 +111,6 @@ class ApiClient {
       method: 'DELETE',
     });
   }
-
-  // Service Records API methods
-  async getServiceRecords(filters: {
-    taskId?: string;
-    performer?: string;
-    startDate?: string;
-    endDate?: string;
-    equipmentId?: string;
-    limit?: number;
-    offset?: number;
-  } = {}) {
-    const queryString = this.buildQueryString(filters);
-    return this.request(`/service-records${queryString}`);
-  }
-
-  async getServiceRecordById(id: string) {
-    return this.request(`/service-records/${id}`);
-  }
-
-  async createServiceRecord(serviceRecord: any) {
-    return this.request('/service-records', {
-      method: 'POST',
-      body: JSON.stringify(serviceRecord),
-    });
-  }
-
-  async updateServiceRecord(id: string, serviceRecord: any) {
-    return this.request(`/service-records/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(serviceRecord),
-    });
-  }
-
-  async deleteServiceRecord(id: string) {
-    return this.request(`/service-records/${id}`, {
-      method: 'DELETE',
-    });
-  }
-
   // Maintenance Tasks API methods
   async getMaintenanceTasks(filters: MaintenanceTaskFilters = {}) {
     const queryString = this.buildQueryString(filters);
@@ -310,11 +271,11 @@ class ApiClient {
 
   // Calibration Logs API methods
   async getCalibrationLogs(filters: {
-    metrology_tool_id?: string;
-    performed_by?: string;
+    toolId?: string;
+    performedBy?: string;
     result?: string;
-    date_from?: string;
-    date_to?: string;
+    startDate?: string;
+    endDate?: string;
     limit?: number;
     offset?: number;
   } = {}) {

@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
     const performedBy = searchParams.get('performedBy');
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
+    const result = searchParams.get('result');
 
     const uow = getUnitOfWork();
     let logs;
@@ -36,6 +37,8 @@ export async function GET(request: NextRequest) {
       logs = await uow.calibrationLogs.findByPerformer(performedBy);
     } else if (startDate && endDate) {
       logs = await uow.calibrationLogs.findByDateRange(startDate, endDate);
+    } else if (result) {
+      logs = await uow.calibrationLogs.findByResult(result);
     } else {
       logs = await uow.calibrationLogs.findAll(limit, offset);
     }

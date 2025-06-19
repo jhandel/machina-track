@@ -107,7 +107,7 @@ export class MetrologyService {
    * Get calibration logs for a specific tool
    */
   async getCalibrationLogs(toolId: string): Promise<CalibrationLog[]> {
-    const response = await apiClient.getCalibrationLogs({ metrology_tool_id: toolId });
+    const response = await apiClient.getCalibrationLogs({ toolId: toolId });
     if (!response.success || !response.data) {
       throw new Error(response.error || 'Failed to fetch calibration logs');
     }
@@ -120,11 +120,10 @@ export class MetrologyService {
   async getAllCalibrationLogs(params?: {
     limit?: number;
     offset?: number;
-    metrology_tool_id?: string;
-    performed_by?: string;
-    result?: string;
-    date_from?: string;
-    date_to?: string;
+    toolId?: string;
+    performedBy?: string;
+    startDate?: string;
+    endDate?: string;
   }): Promise<CalibrationLog[]> {
     const response = await apiClient.getCalibrationLogs(params);
     if (!response.success || !response.data) {
