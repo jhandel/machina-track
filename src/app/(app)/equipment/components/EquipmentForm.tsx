@@ -42,6 +42,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { uploadSimpleFile } from "@/lib/upload-utils";
 
 interface EquipmentFormProps {
   mode: "create" | "edit";
@@ -162,29 +163,20 @@ export function EquipmentForm({
     try {
       setIsUploading(true);
 
-      // Create form data
-      const formData = new FormData();
-      formData.append("file", file);
+      // Upload the file using the simple upload utility
+      const result = await uploadSimpleFile({ file });
 
-      // Upload the file
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
+      if (result.success && result.data) {
+        // Update form data with the new image URL
+        handleInputChange("imageUrl", result.data.url);
 
-      const result = await response.json();
-
-      if (!result.success) {
+        toast({
+          title: "Success",
+          description: "Image uploaded successfully",
+        });
+      } else {
         throw new Error(result.error || "Failed to upload image");
       }
-
-      // Update form data with the new image URL
-      handleInputChange("imageUrl", result.data.url);
-
-      toast({
-        title: "Success",
-        description: "Image uploaded successfully",
-      });
     } catch (error) {
       console.error("Error uploading image:", error);
       toast({

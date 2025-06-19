@@ -3,23 +3,13 @@ import { writeFile } from 'fs/promises';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { existsSync, mkdirSync } from 'fs';
-import {
-  DOCUMENT_STORAGE_TYPE,
-  LOCAL_UPLOAD_DIR,
-  PAPERLESS_NGX_ENABLED,
-  PAPERLESS_NGX_URL,
-  PAPERLESS_NGX_USERNAME,
-  PAPERLESS_NGX_PASSWORD,
-  PAPERLESS_CALIBRATION_TAG_ID
-} from '@/lib/config';
-import { PaperlessService } from '@/services';
-import { json } from 'stream/consumers';
+import { LOCAL_UPLOAD_DIR } from '@/lib/config';
 
 // Determine the upload directory
 const UPLOAD_DIR = join(process.cwd(), LOCAL_UPLOAD_DIR || 'public/uploads');
 
-// Ensure the upload directory exists for local storage
-if (DOCUMENT_STORAGE_TYPE === 'local' && !existsSync(UPLOAD_DIR)) {
+// Ensure the upload directory exists
+if (!existsSync(UPLOAD_DIR)) {
   mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
@@ -29,6 +19,11 @@ export const config = {
   },
 };
 
+/**
+ * Simple Upload endpoint - Handles basic file uploads for images and simple files
+ * This endpoint is for files that don't need document management features
+ * such as equipment photos, profile pictures, etc.
+ */
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -41,14 +36,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get optional metadata
-    const destination = formData.get('destination') as string || 'local';
-    const documentType = formData.get('documentType') as string || undefined;
-    const title = formData.get('title') as string || file.name;
-    const tags = formData.get('tags') as string || '';
-    const customFields = JSON.parse(formData.get('customFields') as string) || {};
-
-    // Validate file size (max 10MB)
+    // Validate file size (max 10MB for simple uploads)
     const MAX_SIZE = 10 * 1024 * 1024; // 10MB
     if (file.size > MAX_SIZE) {
       return NextResponse.json(
@@ -57,101 +45,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Handle upload based on storage type
-    if (destination === 'paperless' && PAPERLESS_NGX_ENABLED) {
-      // Use Paperless-ngx for storage
-      try {
-        console.log('Using Paperless-ngx for document storage');
-        console.log('Paperless URL:', PAPERLESS_NGX_URL);
-        console.log('Document Type:', documentType);
-        console.log('Title:', title);
+    // For simple uploads, we primarily expect images but allow some common file types
+    const allowedTypes = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'image/svg+xml',
+      'application/pdf', // Allow PDF for simple documents
+      'text/plain',
+      'text/csv'
+    ];
 
-        // Create a new instance of PaperlessService for this request
-        const paperlessService = new PaperlessService();
+    if (!allowedTypes.includes(file.type)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Unsupported file type: ${file.type}. Please use common image formats, PDF, or text files.`
+        },
+        { status: 400 }
+      );
+    }
 
-        // Check if Paperless is enabled
-        if (!paperlessService.isEnabled()) {
-          console.log('Paperless is not enabled according to the service');
-          throw new Error('Paperless-ngx integration is not enabled');
-        }
+    // Create a unique filename
+    const fileExtension = file.name.split('.').pop() || 'unknown';
+    const fileName = `${uuidv4()}.${fileExtension}`;
+    const filePath = join(UPLOAD_DIR, fileName);
 
-        console.log('Uploading document to Paperless-ngx...');
-        const result = await paperlessService.uploadDocument(
-          file,
-          {
-            title,
-            documentType,
-            tags: JSON.parse(tags || '[]'),
-            customFields: customFields ? customFields : {},
-          }
-        );
-
-        console.log('Document uploaded successfully:', result);
-
-        return NextResponse.json({
-          success: true,
-          data: {
-            url: result.downloadUrl,
-            documentId: result.id,
-            storageType: 'paperless',
-          }
-        });
-      } catch (error) {
-        console.error('Paperless-ngx upload failed:', error);
-        // Fallback to local storage in case of Paperless-ngx failure
-        console.log('Falling back to local storage after Paperless-ngx failure');
-
-        // Create a unique filename
-        const fileExtension = file.name.split('.').pop() || 'unknown';
-        const fileName = `${uuidv4()}.${fileExtension}`;
-        const filePath = join(UPLOAD_DIR, fileName);
-
-        try {
-          // Ensure upload directory exists
-          if (!existsSync(UPLOAD_DIR)) {
-            mkdirSync(UPLOAD_DIR, { recursive: true });
-          }
-
-          // Convert the file to a buffer and save it
-          const arrayBuffer = await file.arrayBuffer();
-          const buffer = Buffer.from(arrayBuffer);
-          await writeFile(filePath, buffer);
-
-          // Return the URL to the uploaded file
-          const relativePath = LOCAL_UPLOAD_DIR.startsWith('public/')
-            ? LOCAL_UPLOAD_DIR.substring(7) // Remove 'public/' for URL
-            : LOCAL_UPLOAD_DIR;
-
-          const fileUrl = `/${relativePath}/${fileName}`;
-
-          return NextResponse.json({
-            success: true,
-            data: {
-              url: fileUrl,
-              storageType: 'local',
-              note: 'Paperless-ngx upload failed, using local storage as fallback'
-            }
-          });
-        } catch (fallbackError) {
-          console.error('Even local fallback storage failed:', fallbackError);
-          return NextResponse.json(
-            {
-              success: false,
-              error: 'Failed to upload to Paperless-ngx and local fallback also failed',
-              details: error instanceof Error ? error.message : 'Unknown error',
-              fallbackError: fallbackError instanceof Error ? fallbackError.message : 'Unknown fallback error'
-            },
-            { status: 500 }
-          );
-        }
-      }
-    } else {
-      // Use local file storage (default)
-      // Create a unique filename
-      const fileExtension = file.name.split('.').pop() || 'unknown';
-      const fileName = `${uuidv4()}.${fileExtension}`;
-      const filePath = join(UPLOAD_DIR, fileName);
-
+    try {
       // Convert the file to a buffer and save it
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
@@ -168,16 +90,30 @@ export async function POST(request: NextRequest) {
         success: true,
         data: {
           url: fileUrl,
-          storageType: 'local'
+          storageType: 'local',
+          fileName: fileName,
+          originalName: file.name,
+          size: file.size,
+          type: file.type
         }
       });
+    } catch (saveError) {
+      console.error('Failed to save file:', saveError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Failed to save uploaded file',
+          details: saveError instanceof Error ? saveError.message : 'Unknown error'
+        },
+        { status: 500 }
+      );
     }
   } catch (error) {
-    console.error('Error uploading file:', error);
+    console.error('Error processing upload:', error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to upload file',
+        error: 'Failed to process file upload',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }

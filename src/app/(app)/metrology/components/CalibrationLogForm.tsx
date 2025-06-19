@@ -30,6 +30,7 @@ import { resolveDocumentUrl } from "@/lib/document-utils";
 import { DOCUMENT_STORAGE_TYPE } from "@/lib/config";
 import "./calibration-log.css";
 import { custom } from "zod";
+import { uploadDMSDocument } from "@/lib/upload-utils";
 
 interface CalibrationLogFormProps {
   mode: "create" | "edit";
@@ -114,37 +115,16 @@ export function CalibrationLogForm({
 
       // Upload certificate file if selected
       if (certificateFile) {
-        const uploadFormData = new FormData();
-        uploadFormData.append("destination", "paperless");
-        uploadFormData.append("file", certificateFile);
-        uploadFormData.append("documentType", "Calibration Certificate");
-        uploadFormData.append(
-          "title",
-          `Calibration for ${metrologyTool.name} - ${formData.date}`
-        );
-        var customFields = {
-          metrologyToolId: metrologyTool.id,
-          tool: metrologyTool.name,
-          serialL: metrologyTool.serialNumber,
-        };
-        var tags = [];
-        tags.push("metrology");
-        tags.push("calibration");
-        tags.push("internal");
-        uploadFormData.append("customFields", JSON.stringify(customFields));
-        uploadFormData.append("tags", JSON.stringify(tags));
-
         setUploadProgress(10);
 
         try {
-          const response = await fetch("/api/upload", {
-            method: "POST",
-            body: uploadFormData,
-          });
+          const customFields = {
+            metrologyToolId: metrologyTool.id,
+            tool: metrologyTool.name,
+            serialNumber: metrologyTool.serialNumber,
+          };
 
-          if (!response.ok) {
-            throw new Error("Failed to upload certificate");
-          }
+          const tags = ["metrology", "calibration", "internal"];
 
           const progressInterval = setInterval(() => {
             setUploadProgress((prev) => {
@@ -156,14 +136,29 @@ export function CalibrationLogForm({
             });
           }, 300);
 
-          const data = await response.json();
+          const result = await uploadDMSDocument({
+            file: certificateFile,
+            documentType: "Calibration Certificate",
+            title: `Calibration for ${metrologyTool.name} - ${formData.date}`,
+            tags,
+            customFields,
+          });
+
           clearInterval(progressInterval);
           setUploadProgress(100);
 
-          if (data.success) {
-            certificateUrl = data.data.url;
+          if (result.success && result.data) {
+            certificateUrl = result.data.url;
+
+            if (result.warning) {
+              toast({
+                title: "Upload Warning",
+                description: result.warning,
+                variant: "default",
+              });
+            }
           } else {
-            throw new Error(data.error || "Failed to upload certificate");
+            throw new Error(result.error || "Failed to upload certificate");
           }
         } catch (error) {
           console.error("Error uploading certificate:", error);
