@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Save, ArrowLeft, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,7 +29,8 @@ import type { MetrologyTool, CalibrationLog } from "@/lib/types";
 import { resolveDocumentUrl } from "@/lib/document-utils";
 import { DOCUMENT_STORAGE_TYPE } from "@/lib/config";
 import "./calibration-log.css";
-import { RealtimeUploadComponent } from "@/components/ui/realtime-upload";
+import { useRealtimeUpload } from "@/hooks/use-realtime-upload";
+import { UploadProgress } from "@/components/ui/upload-progress";
 
 interface CalibrationLogFormProps {
   mode: "create" | "edit";
@@ -53,12 +54,16 @@ export function CalibrationLogForm({
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [pendingCertificateUrl, setPendingCertificateUrl] = useState<
-    string | null
-  >(null);
-  const [hasFileSelected, setHasFileSelected] = useState(false);
-  const [isUploadInProgress, setIsUploadInProgress] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [createdCalibrationLog, setCreatedCalibrationLog] =
+    useState<CalibrationLog | null>(null);
+
+  const {
+    status: uploadStatus,
+    isUploading,
+    startUpload,
+    result: uploadResult,
+  } = useRealtimeUpload();
 
   const [formData, setFormData] = useState<Omit<CalibrationLog, "id">>({
     metrologyToolId: metrologyTool.id,
@@ -102,84 +107,151 @@ export function CalibrationLogForm({
     }
   };
 
-  const handleUploadComplete = (result: {
-    url: string;
-    documentId?: number;
-    storageType?: string;
-  }) => {
-    setPendingCertificateUrl(result.url);
-    setIsUploadInProgress(false);
-    toast({
-      title: "Certificate Uploaded",
-      description:
-        "Calibration certificate has been uploaded. You can now save the calibration log.",
-    });
-  };
+  // Handle upload completion - update the calibration log with certificate URL
+  React.useEffect(() => {
+    if (uploadResult && createdCalibrationLog && !isUploading) {
+      const updateCalibrationLogWithCertificate = async () => {
+        try {
+          const updatedLog = await metrologyService.updateCalibrationLog(
+            createdCalibrationLog.id,
+            { certificateUrl: uploadResult.url }
+          );
 
-  const handleUploadError = (error: string) => {
-    console.error("Upload error:", error);
-    setIsUploadInProgress(false);
-    // Error handling is done in the RealtimeUploadComponent
-  };
+          toast({
+            title: "Success",
+            description:
+              "Calibration log created and certificate uploaded successfully.",
+          });
 
-  const handleUploadStart = () => {
-    setIsUploadInProgress(true);
+          if (onSuccess) {
+            onSuccess(updatedLog);
+          } else {
+            router.push(`/metrology/${metrologyTool.id}`);
+            router.refresh();
+          }
+        } catch (error) {
+          console.error(
+            "Error updating calibration log with certificate:",
+            error
+          );
+          toast({
+            title: "Warning",
+            description:
+              "Calibration log created but failed to attach certificate. You can manually upload it later.",
+            variant: "destructive",
+          });
+
+          if (onSuccess && createdCalibrationLog) {
+            onSuccess(createdCalibrationLog);
+          } else {
+            router.push(`/metrology/${metrologyTool.id}`);
+            router.refresh();
+          }
+        } finally {
+          setIsSubmitting(false);
+          setCreatedCalibrationLog(null);
+          setSelectedFile(null);
+        }
+      };
+
+      updateCalibrationLogWithCertificate();
+    }
+  }, [
+    uploadResult,
+    createdCalibrationLog,
+    isUploading,
+    metrologyService,
+    toast,
+    onSuccess,
+    router,
+    metrologyTool.id,
+  ]);
+
+  // Handle upload errors
+  React.useEffect(() => {
+    if (uploadStatus.stage === "error" && createdCalibrationLog) {
+      toast({
+        title: "Warning",
+        description: `Calibration log created but certificate upload failed: ${uploadStatus.error}. You can manually upload it later.`,
+        variant: "destructive",
+      });
+
+      if (onSuccess) {
+        onSuccess(createdCalibrationLog);
+      } else {
+        router.push(`/metrology/${metrologyTool.id}`);
+        router.refresh();
+      }
+
+      setIsSubmitting(false);
+      setCreatedCalibrationLog(null);
+      setSelectedFile(null);
+    }
+  }, [
+    uploadStatus.stage,
+    uploadStatus.error,
+    createdCalibrationLog,
+    toast,
+    onSuccess,
+    router,
+    metrologyTool.id,
+  ]);
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    setSelectedFile(file || null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Check if there's a file selected but not yet uploaded
-    if (hasFileSelected && !pendingCertificateUrl && !formData.certificateUrl) {
-      toast({
-        title: "Upload Required",
-        description:
-          "Please upload the calibration certificate before saving the log.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Check if upload is in progress
-    if (isUploadInProgress) {
-      toast({
-        title: "Upload In Progress",
-        description:
-          "Please wait for the certificate upload to complete before saving.",
-        variant: "default",
-      });
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
-      // Use the pending certificate URL if available, otherwise use existing
-      const certificateUrl = pendingCertificateUrl || formData.certificateUrl;
-
-      // Update the form data with the certificate URL
-      const updatedFormData = {
-        ...formData,
-        certificateUrl,
-      };
-
+      // Create the calibration log first (without certificate URL)
       let result;
       if (mode === "create") {
-        result = await metrologyService.createCalibrationLog(updatedFormData);
-
+        result = await metrologyService.createCalibrationLog({
+          ...formData,
+          certificateUrl: "", // Will be updated after upload
+        });
+        var newStatus: MetrologyTool["status"] =
+          result.result == "pass" ? "calibrated" : "out_of_calibration";
         // If creating a new calibration log, also update the metrology tool's calibration dates
         await metrologyService.update(metrologyTool.id, {
           lastCalibrationDate: formData.date,
           nextCalibrationDate: formData.nextDueDate,
-          status: "calibrated",
+          status: newStatus,
         });
       } else if (mode === "edit" && calibrationLogId) {
         result = await metrologyService.updateCalibrationLog(
           calibrationLogId,
-          updatedFormData
+          formData
         );
       }
 
+      // If there's a file selected, upload it and update the calibration log
+      if (selectedFile && result) {
+        setCreatedCalibrationLog(result);
+
+        // Start the file upload
+        await startUpload({
+          file: selectedFile,
+          documentType: "Calibration Certificate",
+          title: `Calibration for ${metrologyTool.name} - ${formData.date}`,
+          tags: ["metrology", "calibration", "internal"],
+          customFields: {
+            metrologyToolId: metrologyTool.id,
+            tool: metrologyTool.name,
+            serialNumber: metrologyTool.serialNumber,
+            associatedObjId: result.id,
+          },
+        });
+
+        // The upload completion will be handled by the useEffect hooks
+        return;
+      }
+
+      // If no file selected, complete the process
       toast({
         title: "Success",
         description: `Calibration log ${
@@ -206,11 +278,10 @@ export function CalibrationLogForm({
         variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
-      // Reset upload state
-      setPendingCertificateUrl(null);
-      setHasFileSelected(false);
-      setIsUploadInProgress(false);
+      if (!selectedFile) {
+        setIsSubmitting(false);
+      }
+      // If file selected, setIsSubmitting(false) will be called after upload completes
     }
   };
 
@@ -279,31 +350,35 @@ export function CalibrationLogForm({
           </Select>
         </div>
 
-        <RealtimeUploadComponent
-          label="Calibration Certificate"
-          description={
-            DOCUMENT_STORAGE_TYPE === "paperless"
-              ? "Upload calibration certificate with real-time progress (PDF, Word, Excel, image files accepted)"
-              : "Upload calibration certificate with real-time progress (PDF, images accepted)"
-          }
-          documentType="Calibration Certificate"
-          title={`Calibration for ${metrologyTool.name} - ${formData.date}`}
-          tags={["metrology", "calibration", "internal"]}
-          customFields={{
-            metrologyToolId: metrologyTool.id,
-            tool: metrologyTool.name,
-            serialNumber: metrologyTool.serialNumber,
-          }}
-          onUploadComplete={handleUploadComplete}
-          onUploadError={handleUploadError}
-          onUploadStart={handleUploadStart}
-          onFileSelected={(file) => setHasFileSelected(!!file)}
-          accept={
-            DOCUMENT_STORAGE_TYPE === "paperless"
-              ? ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.tif,.tiff"
-              : ".pdf,.jpg,.jpeg,.png"
-          }
-        />
+        <div className="space-y-2">
+          <Label htmlFor="certificate">
+            Calibration Certificate (Optional)
+          </Label>
+          <Input
+            id="certificate"
+            type="file"
+            accept={
+              DOCUMENT_STORAGE_TYPE === "paperless"
+                ? ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.tif,.tiff"
+                : ".pdf,.jpg,.jpeg,.png"
+            }
+            onChange={handleFileSelect}
+            disabled={isSubmitting || isUploading}
+          />
+          <p className="text-sm text-muted-foreground">
+            {DOCUMENT_STORAGE_TYPE === "paperless"
+              ? "Upload calibration certificate (PDF, Word, Excel, image files accepted)"
+              : "Upload calibration certificate (PDF, images accepted)"}
+          </p>
+        </div>
+
+        {selectedFile && (
+          <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <p className="text-sm text-blue-800">
+              📎 Selected file: {selectedFile.name}
+            </p>
+          </div>
+        )}
 
         {formData.certificateUrl && (
           <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-md">
@@ -326,34 +401,14 @@ export function CalibrationLogForm({
           </div>
         )}
 
-        {pendingCertificateUrl && (
-          <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
-            <p className="text-sm text-blue-800">
-              ✅ New certificate uploaded and ready to be saved with this
-              calibration log.
-            </p>
-          </div>
-        )}
-
-        {hasFileSelected &&
-          !pendingCertificateUrl &&
-          !isUploadInProgress &&
-          !formData.certificateUrl && (
-            <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-              <p className="text-sm text-yellow-800">
-                ⚠️ File selected but not yet uploaded. Please click the Upload
-                button to upload the certificate.
-              </p>
-            </div>
-          )}
-
-        {isUploadInProgress && (
-          <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
-            <p className="text-sm text-blue-800">
-              ⏳ Upload in progress... Please wait for the upload to complete
-              before saving.
-            </p>
-          </div>
+        {/* Show upload progress when upload is in progress */}
+        {isUploading && (
+          <UploadProgress
+            status={uploadStatus}
+            fileName={selectedFile?.name}
+            onCancel={() => {}}
+            onRetry={() => {}}
+          />
         )}
 
         <div className="space-y-2">
@@ -382,31 +437,11 @@ export function CalibrationLogForm({
             </>
           )}
         </Button>
-        <Button
-          type="submit"
-          disabled={
-            isSubmitting ||
-            isUploadInProgress ||
-            (hasFileSelected &&
-              !pendingCertificateUrl &&
-              !isUploadInProgress &&
-              !formData.certificateUrl)
-          }
-        >
-          {isSubmitting ? (
+        <Button type="submit" disabled={isSubmitting || isUploading}>
+          {isSubmitting || isUploading ? (
             <>
-              <span className="animate-spin mr-2">⏳</span> Saving...
-            </>
-          ) : isUploadInProgress ? (
-            <>
-              <span className="animate-spin mr-2">⏳</span> Upload in
-              Progress...
-            </>
-          ) : hasFileSelected &&
-            !pendingCertificateUrl &&
-            !formData.certificateUrl ? (
-            <>
-              <Upload className="mr-2 h-4 w-4" /> Upload Certificate First
+              <span className="animate-spin mr-2">⏳</span>
+              {isUploading ? "Uploading Certificate..." : "Saving..."}
             </>
           ) : (
             <>

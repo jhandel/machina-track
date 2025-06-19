@@ -8,7 +8,7 @@ export interface Equipment {
   location?: string; // For display purposes - populated by joins
   purchaseDate?: string; // ISO date string
   status: 'operational' | 'maintenance' | 'decommissioned';
-  maintenanceScheduleIds?: string[]; 
+  maintenanceScheduleIds?: string[];
   imageUrl?: string;
   notes?: string;
 }
@@ -21,13 +21,13 @@ export interface MetrologyTool {
   serialNumber: string;
   manufacturerId?: string;
   manufacturer?: string; // For display purposes - populated by joins
-  calibrationIntervalDays: number; 
+  calibrationIntervalDays: number;
   lastCalibrationDate?: string; // ISO date string
   nextCalibrationDate?: string; // ISO date string
   calibrationLogIds: string[];
   locationId?: string;
   location?: string; // For display purposes - populated by joins
-  status: 'calibrated' | 'due_calibration' | 'out_of_service' | 'awaiting_calibration';
+  status: 'calibrated' | 'due_calibration' | 'out_of_calibration' | 'awaiting_calibration';
   imageUrl?: string;
   notes?: string;
 }
@@ -45,17 +45,17 @@ export interface CalibrationLog {
 
 export interface Consumable {
   id: string;
-  name: string; 
+  name: string;
   typeId: string;
   type?: string; // For display purposes - populated by joins
   materialId?: string;
   material?: string; // For display purposes - populated by joins
-  size?: string; 
+  size?: string;
   quantity: number;
-  minQuantity: number; 
+  minQuantity: number;
   locationId: string;
   location?: string; // For display purposes - populated by joins
-  toolLifeHours?: number; 
+  toolLifeHours?: number;
   remainingToolLifeHours?: number;
   lastUsedDate?: string; // ISO date string
   endOfLifeDate?: string; // ISO date string

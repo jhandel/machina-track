@@ -5,8 +5,22 @@ import { DatabaseError } from '../../interfaces';
 import { getPrismaClient } from '../../prisma-client';
 
 export class PrismaCalibrationLogRepository implements CalibrationLogRepository {
-  async findById(id: string): Promise<CalibrationLog | null> {
+
+  async findByResult(result: string): Promise<CalibrationLog[]> {
+    const prisma = await getPrismaClient();
+    try {
       const prisma = await getPrismaClient();
+      const logs = await prisma.calibration_logs.findMany({
+        where: { result },
+        orderBy: { created_at: 'desc' },
+      });
+      return logs.map(this.mapToCalibrationLog);
+    } catch (error) {
+      throw new DatabaseError(`Failed to find calibration logs by result: ${error}`);
+    }
+  }
+  async findById(id: string): Promise<CalibrationLog | null> {
+    const prisma = await getPrismaClient();
     try {
       const prisma = await getPrismaClient();
       const log = await prisma.calibration_logs.findUnique({ where: { id } });
@@ -17,13 +31,13 @@ export class PrismaCalibrationLogRepository implements CalibrationLogRepository 
   }
 
   async findAll(limit: number = 100, offset: number = 0): Promise<CalibrationLog[]> {
-      const prisma = await getPrismaClient();
+    const prisma = await getPrismaClient();
     try {
       const prisma = await getPrismaClient();
       const logs = await prisma.calibration_logs.findMany({
         skip: offset,
         take: limit,
-        orderBy: { date: 'desc' },
+        orderBy: { created_at: 'desc' },
       });
       return logs.map(this.mapToCalibrationLog);
     } catch (error) {
@@ -32,7 +46,7 @@ export class PrismaCalibrationLogRepository implements CalibrationLogRepository 
   }
 
   async create(item: Omit<CalibrationLog, 'id'>): Promise<CalibrationLog> {
-      const prisma = await getPrismaClient();
+    const prisma = await getPrismaClient();
     try {
       const prisma = await getPrismaClient();
       const created = await prisma.calibration_logs.create({
@@ -55,7 +69,7 @@ export class PrismaCalibrationLogRepository implements CalibrationLogRepository 
   }
 
   async update(id: string, item: Partial<CalibrationLog>): Promise<CalibrationLog | null> {
-      const prisma = await getPrismaClient();
+    const prisma = await getPrismaClient();
     try {
       const prisma = await getPrismaClient();
       const updated = await prisma.calibration_logs.update({
@@ -80,7 +94,7 @@ export class PrismaCalibrationLogRepository implements CalibrationLogRepository 
   }
 
   async delete(id: string): Promise<boolean> {
-      const prisma = await getPrismaClient();
+    const prisma = await getPrismaClient();
     try {
       const prisma = await getPrismaClient();
       await prisma.calibration_logs.delete({ where: { id } });
@@ -94,7 +108,7 @@ export class PrismaCalibrationLogRepository implements CalibrationLogRepository 
   }
 
   async count(): Promise<number> {
-      const prisma = await getPrismaClient();
+    const prisma = await getPrismaClient();
     try {
       const prisma = await getPrismaClient();
       return await prisma.calibration_logs.count();
@@ -104,12 +118,12 @@ export class PrismaCalibrationLogRepository implements CalibrationLogRepository 
   }
 
   async findByToolId(toolId: string): Promise<CalibrationLog[]> {
-      const prisma = await getPrismaClient();
+    const prisma = await getPrismaClient();
     try {
       const prisma = await getPrismaClient();
       const logs = await prisma.calibration_logs.findMany({
         where: { metrology_tool_id: toolId },
-        orderBy: { date: 'desc' },
+        orderBy: { created_at: 'desc' },
       });
       return logs.map(this.mapToCalibrationLog);
     } catch (error) {
@@ -117,18 +131,18 @@ export class PrismaCalibrationLogRepository implements CalibrationLogRepository 
     }
   }
 
-  async findByDateRange(startDate: string, endDate: string): Promise<CalibrationLog[]> {
-      const prisma = await getPrismaClient();
+  async findByDateRange(startDate: Date, endDate: Date): Promise<CalibrationLog[]> {
+    const prisma = await getPrismaClient();
     try {
       const prisma = await getPrismaClient();
       const logs = await prisma.calibration_logs.findMany({
         where: {
-          date: {
+          created_at: {
             gte: startDate,
             lte: endDate,
           },
         },
-        orderBy: { date: 'desc' },
+        orderBy: { created_at: 'desc' },
       });
       return logs.map(this.mapToCalibrationLog);
     } catch (error) {
@@ -137,12 +151,12 @@ export class PrismaCalibrationLogRepository implements CalibrationLogRepository 
   }
 
   async findByPerformer(performedBy: string): Promise<CalibrationLog[]> {
-      const prisma = await getPrismaClient();
+    const prisma = await getPrismaClient();
     try {
       const prisma = await getPrismaClient();
       const logs = await prisma.calibration_logs.findMany({
         where: { performed_by: performedBy },
-        orderBy: { date: 'desc' },
+        orderBy: { created_at: 'desc' },
       });
       return logs.map(this.mapToCalibrationLog);
     } catch (error) {

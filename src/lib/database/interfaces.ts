@@ -1,12 +1,12 @@
-import type { 
-  Equipment, 
-  MetrologyTool, 
-  CalibrationLog, 
-  Consumable, 
-  MaintenanceTask, 
-  ServiceRecord, 
+import type {
+  Equipment,
+  MetrologyTool,
+  CalibrationLog,
+  Consumable,
+  MaintenanceTask,
+  ServiceRecord,
   MachineLogEntry,
-  DashboardSummary 
+  DashboardSummary
 } from '@/lib/types';
 
 /**
@@ -47,7 +47,7 @@ export interface MetrologyToolRepository extends BaseRepository<MetrologyTool> {
  */
 export interface CalibrationLogRepository extends BaseRepository<CalibrationLog> {
   findByToolId(toolId: string): Promise<CalibrationLog[]>;
-  findByDateRange(startDate: string, endDate: string): Promise<CalibrationLog[]>;
+  findByDateRange(startDate: Date, endDate: Date): Promise<CalibrationLog[]>;
   findByPerformer(performedBy: string): Promise<CalibrationLog[]>;
   findByResult(result: string): Promise<CalibrationLog[]>;
 }
@@ -154,25 +154,25 @@ export interface SettingsRepository {
   createLocation(name: string): Promise<Location>;
   updateLocation(id: string, name: string): Promise<Location>;
   deleteLocation(id: string): Promise<void>;
-  
+
   // Manufacturers
   getAllManufacturers(): Promise<Manufacturer[]>;
   createManufacturer(name: string): Promise<Manufacturer>;
   updateManufacturer(id: string, name: string): Promise<Manufacturer>;
   deleteManufacturer(id: string): Promise<void>;
-  
+
   // Metrology Tool Types
   getAllMetrologyToolTypes(): Promise<MetrologyToolType[]>;
   createMetrologyToolType(name: string): Promise<MetrologyToolType>;
   updateMetrologyToolType(id: string, name: string): Promise<MetrologyToolType>;
   deleteMetrologyToolType(id: string): Promise<void>;
-  
+
   // Consumable Materials
   getAllConsumableMaterials(): Promise<ConsumableMaterial[]>;
   createConsumableMaterial(name: string): Promise<ConsumableMaterial>;
   updateConsumableMaterial(id: string, name: string): Promise<ConsumableMaterial>;
   deleteConsumableMaterial(id: string): Promise<void>;
-  
+
   // Consumable Types
   getAllConsumableTypes(): Promise<ConsumableType[]>;
   createConsumableType(name: string): Promise<ConsumableType>;
@@ -193,7 +193,7 @@ export interface UnitOfWork {
   machineLogs: MachineLogRepository;
   dashboard: DashboardRepository;
   settings: SettingsRepository;
-  
+
   /**
    * Execute multiple operations in a single transaction
    */

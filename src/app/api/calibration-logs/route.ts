@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUnitOfWork } from '@/lib/database/repositories';
 import { DatabaseError, NotFoundError, ValidationError } from '@/lib/database/interfaces';
 import { z } from 'zod';
+import { CalibrationLog } from '@/lib/types';
 
 // Validation schema for calibration logs
 const CalibrationLogSchema = z.object({
@@ -29,18 +30,24 @@ export async function GET(request: NextRequest) {
     const result = searchParams.get('result');
 
     const uow = getUnitOfWork();
-    let logs;
+    let logs: CalibrationLog[] = [];
 
     if (toolId) {
       logs = await uow.calibrationLogs.findByToolId(toolId);
     } else if (performedBy) {
       logs = await uow.calibrationLogs.findByPerformer(performedBy);
     } else if (startDate && endDate) {
-      logs = await uow.calibrationLogs.findByDateRange(startDate, endDate);
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        logs = [];
+      } else {
+        logs = await uow.calibrationLogs.findByDateRange(start, end);
+      }
     } else if (result) {
       logs = await uow.calibrationLogs.findByResult(result);
     } else {
-      logs = await uow.calibrationLogs.findAll(limit, offset);
+      logs = (await uow.calibrationLogs.findAll(limit, offset));
     }
 
     const total = await uow.calibrationLogs.count();
@@ -57,7 +64,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('GET /api/calibration-logs error:', error);
-    
+
     if (error instanceof DatabaseError) {
       return NextResponse.json(
         { success: false, error: error.message },
@@ -78,13 +85,13 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
     // Validate input
     const validationResult = CalibrationLogSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Validation failed',
           details: validationResult.error.errors
         },
@@ -101,14 +108,14 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
   } catch (error) {
     console.error('POST /api/calibration-logs error:', error);
-    
+
     if (error instanceof ValidationError) {
       return NextResponse.json(
         { success: false, error: error.message },
         { status: 400 }
       );
     }
-    
+
     if (error instanceof DatabaseError) {
       return NextResponse.json(
         { success: false, error: error.message },

@@ -171,7 +171,7 @@ export default function MetrologyToolDetailPage() {
         return "default"; // Often green or blue
       case "due_calibration":
         return "secondary"; // Check theme for yellow/orange
-      case "out_of_service":
+      case "out_of_calibration":
         return "destructive";
       case "awaiting_calibration":
         return "outline"; // Check theme for a neutral/pending color
