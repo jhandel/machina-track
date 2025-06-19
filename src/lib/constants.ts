@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { LayoutDashboard, Wrench, Ruler, Package, Bot, Factory, ClipboardList, Settings2 } from 'lucide-react';
+import { LayoutDashboard, Wrench, Ruler, Package, Bot, Factory, ClipboardList, Settings2, TestTube } from 'lucide-react';
 import type { Equipment } from './types';
 import type { MetrologyTool } from './types';
 import type { CalibrationLog } from './types';
@@ -27,27 +27,27 @@ export const NAV_ITEMS: NavItem[] = [
   {
     title: 'Equipment',
     href: '/equipment',
-    icon: Factory, 
+    icon: Factory,
   },
   {
     title: 'Metrology',
     href: '/metrology',
-    icon: Ruler, 
+    icon: Ruler,
   },
   {
     title: 'Inventory',
     href: '/inventory',
-    icon: Package, 
+    icon: Package,
   },
   {
     title: 'Maintenance',
     href: '/maintenance',
-    icon: ClipboardList, 
+    icon: ClipboardList,
   },
   {
     title: 'Settings',
     href: '/settings',
-    icon: Settings2, 
+    icon: Settings2,
   }
 ];
 

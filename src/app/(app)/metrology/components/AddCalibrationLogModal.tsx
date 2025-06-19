@@ -24,6 +24,7 @@ export function AddCalibrationLogModal({
   onCalibrationLogAdded,
 }: AddCalibrationLogModalProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [useAsyncForm, setUseAsyncForm] = useState(false);
 
   const handleSuccess = () => {
     setIsOpen(false);

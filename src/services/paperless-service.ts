@@ -325,6 +325,261 @@ export class PaperlessService {
     }
 
     /**
+     * Upload a document to Paperless-ngx with detailed progress reporting
+     * @param file The file to upload
+     * @param metadata Additional metadata for the document
+     * @param onProgress Detailed progress callback
+     */
+    async uploadDocumentWithDetailedProgress(
+        file: File,
+        metadata: {
+            title: string;
+            documentType?: string;
+            customFields?: Record<string, any>;
+            tags?: string[];
+            archiveSerialNumber?: string;
+        },
+        onProgress?: (stage: string, progress: number, message: string, details?: any) => void
+    ): Promise<{ id: number; downloadUrl: string }> {
+        if (!this.isEnabled()) {
+            throw new Error('Paperless-ngx integration is not enabled');
+        }
+
+        try {
+            const token = await this.getToken();
+            onProgress?.('preparing', 5, 'Authenticated with Paperless-ngx', {
+                currentStep: 'Authentication',
+                totalSteps: 8
+            });
+
+            // First, prepare the document metadata
+            const formData = new FormData();
+            formData.append('title', metadata.title || file.name);
+            if (metadata.archiveSerialNumber) {
+                formData.append('archive_serial_number', metadata.archiveSerialNumber);
+            }
+
+            onProgress?.('preparing', 10, 'Resolving document type...', {
+                currentStep: 'Document Type Resolution',
+                totalSteps: 8
+            });
+
+            // Find the document type ID based on the provided documentType
+            if (metadata.documentType && metadata.documentType !== '') {
+                const documentTypeId = await this.getOrCreateDocumentTypeId(metadata.documentType);
+                if (documentTypeId) {
+                    formData.append('document_type', documentTypeId.toString());
+                } else {
+                    console.warn(`Document type "${metadata.documentType}" not found, skipping.`);
+                }
+            }
+
+            onProgress?.('preparing', 15, 'Processing custom fields...', {
+                currentStep: 'Custom Fields Processing',
+                totalSteps: 8
+            });
+
+            // Add custom fields if provided
+            var fieldMap: Record<number, string> = {};
+            if (metadata.customFields) {
+                for (const [key, value] of Object.entries(metadata.customFields)) {
+                    if (!key || key === '') {
+                        continue;
+                    }
+                    var fieldId = await this.getOrCreateCustomFieldId(key);
+                    if (fieldId) {
+                        fieldMap[fieldId] = value;
+                    }
+                }
+            }
+
+            onProgress?.('preparing', 20, 'Processing tags...', {
+                currentStep: 'Tags Processing',
+                totalSteps: 8
+            });
+
+            // Add tags if provided
+            if (metadata.tags && metadata.tags.length > 0) {
+                for (const tag of metadata.tags) {
+                    if (!tag || tag === '') {
+                        continue;
+                    }
+                    const tagId = await this.getOrCreateTagId(tag);
+                    if (tagId) {
+                        formData.append('tags', tagId.toString());
+                    } else {
+                        console.warn(`Tag "${tag}" not found, skipping.`);
+                    }
+                }
+            }
+
+            onProgress?.('uploading', 25, 'Starting file upload to DMS...', {
+                currentStep: 'File Upload',
+                totalSteps: 8
+            });
+
+            formData.append('document', file);
+
+            // Upload the document
+            const uploadResponse = await fetch(`${this.baseUrl}/api/documents/post_document/`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Token ${token}`,
+                },
+                body: formData,
+            });
+
+            onProgress?.('uploading', 40, 'File uploaded, initiating processing...', {
+                currentStep: 'Upload Complete',
+                totalSteps: 8
+            });
+
+            if (!uploadResponse.ok) {
+                console.error('Upload response:', await uploadResponse.text());
+                throw new Error(`Document upload failed: ${uploadResponse.statusText}`);
+            }
+
+            // The response contains the task UUID, not the document ID
+            const taskId = await uploadResponse.text();
+            const taskIdCleaned = taskId.replace(/"/g, '');
+
+            onProgress?.('processing', 45, 'Document queued for processing in DMS...', {
+                currentStep: 'Processing Queue',
+                totalSteps: 8
+            });
+
+            // Trigger task processing
+            await fetch(`${this.baseUrl}/api/tasks/run/${taskIdCleaned}/`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Token ${token}`,
+                },
+            });
+
+            // Wait for the document to be processed with detailed progress
+            const documentId = await this.waitForTaskCompletionWithProgress(
+                taskIdCleaned,
+                30, // Maximum 30 attempts
+                2000, // 2 seconds between attempts
+                onProgress
+            );
+
+            onProgress?.('finalizing', 85, 'Processing custom fields...', {
+                currentStep: 'Custom Fields Update',
+                totalSteps: 8
+            });
+
+            // Update custom fields after document is processed
+            if (Object.keys(fieldMap).length > 0) {
+                var bulkUpdateData = {
+                    documents: [documentId],
+                    method: 'modify_custom_fields',
+                    parameters: {
+                        add_custom_fields: fieldMap,
+                        remove_custom_fields: {},
+                    },
+                };
+
+                const customFieldsResponse = await fetch(`${this.baseUrl}/api/documents/bulk_edit/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Token ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(bulkUpdateData),
+                });
+
+                if (!customFieldsResponse.ok) {
+                    console.error('Custom fields update failed:', await customFieldsResponse.text());
+                    throw new Error('Custom fields update failed');
+                }
+            }
+
+            onProgress?.('complete', 100, 'Document successfully uploaded and processed!', {
+                currentStep: 'Complete',
+                totalSteps: 8
+            });
+
+            // Return the document ID and download URL
+            return {
+                id: documentId,
+                downloadUrl: `${this.baseUrl}/api/documents/${documentId}/download/`,
+            };
+        } catch (error) {
+            console.error('Failed to upload document to Paperless-ngx:', error);
+            onProgress?.('error', 0, 'Upload failed', {
+                error: error instanceof Error ? error.message : 'Unknown error'
+            });
+            throw new Error('Failed to upload document to Paperless-ngx');
+        }
+    }
+
+    /**
+     * Wait for a task to complete with detailed progress reporting
+     */
+    private async waitForTaskCompletionWithProgress(
+        taskId: string,
+        maxAttempts = 30,
+        interval = 2000,
+        onProgress?: (stage: string, progress: number, message: string, details?: any) => void
+    ): Promise<number> {
+        let attempts = 0;
+        const startTime = Date.now();
+
+        while (attempts < maxAttempts) {
+            const taskStatus = await this.checkTaskStatus(taskId);
+
+            // Calculate progress between 50% and 80%
+            const taskProgress = 50 + (30 * (attempts / maxAttempts));
+
+            // Estimate time remaining
+            const elapsedTime = Date.now() - startTime;
+            const avgTimePerAttempt = elapsedTime / (attempts + 1);
+            const remainingAttempts = maxAttempts - attempts;
+            const estimatedRemainingTime = Math.round((avgTimePerAttempt * remainingAttempts) / 1000);
+
+            // Determine processing stage based on task status and time elapsed
+            let stage = 'processing';
+            let message = 'Processing document in DMS...';
+
+            if (taskStatus.status === 'PENDING') {
+                stage = 'processing';
+                message = 'Document queued for processing...';
+            } else if (taskStatus.status === 'STARTED') {
+                if (attempts < maxAttempts * 0.3) {
+                    stage = 'processing';
+                    message = 'Analyzing document structure...';
+                } else if (attempts < maxAttempts * 0.7) {
+                    stage = 'indexing';
+                    message = 'Extracting text and performing OCR...';
+                } else {
+                    stage = 'finalizing';
+                    message = 'Indexing and creating searchable content...';
+                }
+            }
+
+            onProgress?.(stage, taskProgress, message, {
+                currentStep: `Processing (${attempts + 1}/${maxAttempts})`,
+                totalSteps: 8,
+                timeRemaining: estimatedRemainingTime > 0 ? `${estimatedRemainingTime}s` : undefined,
+                taskStatus: taskStatus.status
+            });
+
+            if (taskStatus.status === 'SUCCESS' && taskStatus.related_document) {
+                return taskStatus.related_document;
+            } else if (taskStatus.status === 'FAILURE') {
+                throw new Error(`Task failed: ${JSON.stringify(taskStatus || {})}`);
+            }
+
+            // If task is still in progress, wait and try again
+            await new Promise(resolve => setTimeout(resolve, interval));
+            attempts++;
+        }
+
+        throw new Error(`Task timed out after ${maxAttempts} attempts`);
+    }
+
+    /**
      * Download a document from Paperless-ngx
      * @param documentId The ID of the document to download
      */
