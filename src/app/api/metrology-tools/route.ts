@@ -14,7 +14,7 @@ const MetrologyToolSchema = z.object({
   nextCalibrationDate: z.string().optional(),
   calibrationLogIds: z.array(z.string()).default([]),
   locationId: z.string().optional(),
-  status: z.enum(['calibrated', 'due_calibration', 'out_of_service', 'awaiting_calibration']).default('calibrated'),
+  status: z.enum(['calibrated', 'due_calibration', 'out_of_calibration', 'awaiting_calibration']).default('calibrated'),
   imageUrl: z.string().optional(),
   notes: z.string().optional()
 });
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('GET /api/metrology-tools error:', error);
-    
+
     if (error instanceof DatabaseError) {
       return NextResponse.json(
         { success: false, error: error.message },
@@ -80,13 +80,13 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
     // Validate input
     const validationResult = MetrologyToolSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Validation failed',
           details: validationResult.error.errors
         },
@@ -103,14 +103,14 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
   } catch (error) {
     console.error('POST /api/metrology-tools error:', error);
-    
+
     if (error instanceof ValidationError) {
       return NextResponse.json(
         { success: false, error: error.message },
         { status: 400 }
       );
     }
-    
+
     if (error instanceof DatabaseError) {
       return NextResponse.json(
         { success: false, error: error.message },

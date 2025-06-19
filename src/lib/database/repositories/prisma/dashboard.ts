@@ -6,7 +6,7 @@ import { DatabaseError } from '../../interfaces';
 
 export class PrismaDashboardRepository implements DashboardRepository {
   async getDashboardSummary(): Promise<DashboardSummary> {
-      const prisma = await getPrismaClient();
+    const prisma = await getPrismaClient();
     try {
       const prisma = await getPrismaClient();
       const today = new Date().toISOString().split('T')[0];
@@ -33,7 +33,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
       const overdueCalibrationsCount = await prisma.metrology_tools.count({
         where: {
           next_calibration_date: { lt: today },
-          status: { not: 'out_of_service' },
+          status: { not: 'out_of_calibration' },
         },
       });
 
@@ -48,7 +48,7 @@ export class PrismaDashboardRepository implements DashboardRepository {
   }
 
   async getRecentActivity(limit: number = 10): Promise<any[]> {
-      const prisma = await getPrismaClient();
+    const prisma = await getPrismaClient();
     try {
       const prisma = await getPrismaClient();
       const activities: any[] = [];

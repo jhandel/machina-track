@@ -1,4 +1,3 @@
-
 export interface Equipment {
   id: string;
   name: string;
@@ -103,6 +102,27 @@ export interface MachineLogEntry {
 
 // Generic type for form modes
 export type FormMode = 'create' | 'edit' | 'view';
+
+// Document-related types for Paperless-ngx integration
+export interface PaperlessDocument {
+  id: number;
+  title: string;
+  content?: string;
+  created: string;
+  modified: string;
+  added: string;
+  archive_serial_number?: string;
+  original_file_name: string;
+  document_type?: number;
+  tags?: number[];
+  custom_fields?: CustomFieldValue[];
+  download_url?: string;
+}
+
+export interface CustomFieldValue {
+  field: number;
+  value: string;
+}
 
 // For dashboard summaries
 export interface DashboardSummary {

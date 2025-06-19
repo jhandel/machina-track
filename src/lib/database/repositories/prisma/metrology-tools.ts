@@ -7,9 +7,9 @@ import { DatabaseError } from '../../interfaces';
 
 export class PrismaMetrologyToolRepository implements MetrologyToolRepository {
   async findById(id: string): Promise<MetrologyTool | null> {
-      const prisma = await getPrismaClient();
+    const prisma = await getPrismaClient();
     try {
-      const tool = await prisma.metrology_tools.findUnique({ 
+      const tool = await prisma.metrology_tools.findUnique({
         where: { id },
         include: {
           metrology_tool_types: true,
@@ -24,7 +24,7 @@ export class PrismaMetrologyToolRepository implements MetrologyToolRepository {
   }
 
   async findAll(limit: number = 100, offset: number = 0): Promise<MetrologyTool[]> {
-      const prisma = await getPrismaClient();
+    const prisma = await getPrismaClient();
     try {
       const tools = await prisma.metrology_tools.findMany({
         skip: offset,
@@ -43,7 +43,7 @@ export class PrismaMetrologyToolRepository implements MetrologyToolRepository {
   }
 
   async create(item: Omit<MetrologyTool, 'id'>): Promise<MetrologyTool> {
-      const prisma = await getPrismaClient();
+    const prisma = await getPrismaClient();
     try {
       const created = await prisma.metrology_tools.create({
         data: {
@@ -73,7 +73,7 @@ export class PrismaMetrologyToolRepository implements MetrologyToolRepository {
   }
 
   async update(id: string, item: Partial<MetrologyTool>): Promise<MetrologyTool | null> {
-      const prisma = await getPrismaClient();
+    const prisma = await getPrismaClient();
     try {
       const updated = await prisma.metrology_tools.update({
         where: { id },
@@ -106,7 +106,7 @@ export class PrismaMetrologyToolRepository implements MetrologyToolRepository {
   }
 
   async delete(id: string): Promise<boolean> {
-      const prisma = await getPrismaClient();
+    const prisma = await getPrismaClient();
     try {
       await prisma.metrology_tools.delete({ where: { id } });
       return true;
@@ -119,7 +119,7 @@ export class PrismaMetrologyToolRepository implements MetrologyToolRepository {
   }
 
   async count(): Promise<number> {
-      const prisma = await getPrismaClient();
+    const prisma = await getPrismaClient();
     try {
       return await prisma.metrology_tools.count();
     } catch (error) {
@@ -128,7 +128,7 @@ export class PrismaMetrologyToolRepository implements MetrologyToolRepository {
   }
 
   async findByStatus(status: MetrologyTool['status']): Promise<MetrologyTool[]> {
-      const prisma = await getPrismaClient();
+    const prisma = await getPrismaClient();
     try {
       const tools = await prisma.metrology_tools.findMany({
         where: { status },
@@ -146,13 +146,13 @@ export class PrismaMetrologyToolRepository implements MetrologyToolRepository {
   }
 
   async findDueForCalibration(date?: string): Promise<MetrologyTool[]> {
-      const prisma = await getPrismaClient();
+    const prisma = await getPrismaClient();
     try {
       const compareDate = date || new Date().toISOString();
       const tools = await prisma.metrology_tools.findMany({
         where: {
           next_calibration_date: { lte: compareDate },
-          status: { not: 'out_of_service' },
+          status: { not: 'out_of_calibration' },
         },
         orderBy: { next_calibration_date: 'asc' },
         include: {
@@ -168,13 +168,13 @@ export class PrismaMetrologyToolRepository implements MetrologyToolRepository {
   }
 
   async findOverdueCalibration(date?: string): Promise<MetrologyTool[]> {
-      const prisma = await getPrismaClient();
+    const prisma = await getPrismaClient();
     try {
       const compareDate = date || new Date().toISOString();
       const tools = await prisma.metrology_tools.findMany({
         where: {
           next_calibration_date: { lt: compareDate },
-          status: { not: 'out_of_service' },
+          status: { not: 'out_of_calibration' },
         },
         orderBy: { next_calibration_date: 'asc' },
         include: {
@@ -190,9 +190,9 @@ export class PrismaMetrologyToolRepository implements MetrologyToolRepository {
   }
 
   async findBySerialNumber(serialNumber: string): Promise<MetrologyTool | null> {
-      const prisma = await getPrismaClient();
+    const prisma = await getPrismaClient();
     try {
-      const tool = await prisma.metrology_tools.findFirst({ 
+      const tool = await prisma.metrology_tools.findFirst({
         where: { serial_number: serialNumber },
         include: {
           metrology_tool_types: true,
@@ -207,7 +207,7 @@ export class PrismaMetrologyToolRepository implements MetrologyToolRepository {
   }
 
   async search(query: string): Promise<MetrologyTool[]> {
-      const prisma = await getPrismaClient();
+    const prisma = await getPrismaClient();
     try {
       const tools = await prisma.metrology_tools.findMany({
         where: {

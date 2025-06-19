@@ -52,6 +52,7 @@ import { EquipmentService } from "@/services/equipment-service";
 import { MaintenanceService } from "@/services/maintenance-service";
 import { serviceRecordService } from "@/services/service-record-service";
 import AddServiceLogModal from "../components/AddServiceLogModal";
+import { RelatedDocuments } from "@/components/common/RelatedDocuments";
 
 export default function EquipmentDetailPage() {
   const params = useParams();
@@ -542,19 +543,16 @@ export default function EquipmentDetailPage() {
               </Button>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Related Documents</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-2">
-              <Button variant="link" asChild className="justify-start px-0">
-                <Link href="#">View Manual (PDF)</Link>
-              </Button>
-              <Button variant="link" asChild className="justify-start px-0">
-                <Link href="#">Parts Catalog (PDF)</Link>
-              </Button>
-            </CardContent>
-          </Card>
+          <RelatedDocuments
+            objectId={equipment.id}
+            title="Related Documents"
+            description="Upload manuals, parts catalogs, warranty documents, and other equipment-related files"
+            defaultDocumentType="Equipment Document"
+            additionalTags={[
+              "equipment",
+              equipment.name?.toLowerCase().replace(/\s+/g, "-") || "unknown",
+            ]}
+          />
         </div>
       </div>
     </div>

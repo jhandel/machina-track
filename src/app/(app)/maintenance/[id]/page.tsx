@@ -58,6 +58,7 @@ import {
   serviceRecordService,
 } from "@/services/service-record-service";
 import CompleteMaintenanceModal from "../components/CompleteMaintenanceModal";
+import { RelatedDocuments } from "@/components/common/RelatedDocuments";
 
 export default function MaintenanceTaskDetailPage() {
   const params = useParams();
@@ -475,16 +476,20 @@ export default function MaintenanceTaskDetailPage() {
                   View Equipment Details
                 </Button>
               )}
-              <Button variant="link" asChild className="justify-start px-0">
-                <Link
-                  href="#"
-                  className="inline-flex items-center justify-center gap-2"
-                >
-                  View Maintenance Manual (PDF)
-                </Link>
-              </Button>
             </CardContent>
           </Card>
+          <RelatedDocuments
+            objectId={task.id}
+            title="Related Documents"
+            description="Upload maintenance manuals, procedures, work instructions, and other task-related documents"
+            defaultDocumentType="Maintenance Document"
+            additionalTags={[
+              "maintenance",
+              "task",
+              task.description?.toLowerCase().replace(/\s+/g, "-") ||
+                "maintenance-task",
+            ]}
+          />
         </div>
       </div>
     </div>

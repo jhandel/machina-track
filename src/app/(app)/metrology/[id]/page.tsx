@@ -49,6 +49,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { MetrologyService } from "@/services/metrology-service";
+import { RelatedDocuments } from "@/components/common/RelatedDocuments";
 
 export default function MetrologyToolDetailPage() {
   const params = useParams();
@@ -61,49 +62,71 @@ export default function MetrologyToolDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchToolData = async () => {
-      if (!toolId) {
-        setError("No tool ID provided");
-        setLoading(false);
-        return;
-      }
+  const fetchToolData = async () => {
+    if (!toolId) {
+      setError("No tool ID provided");
+      setLoading(false);
+      return;
+    }
 
-      try {
-        setLoading(true);
-        setError(null);
+    try {
+      setLoading(true);
+      setError(null);
 
-        const metrologyService = new MetrologyService();
-        const fetchedTool = await metrologyService.getById(toolId);
+      const metrologyService = new MetrologyService();
+      const fetchedTool = await metrologyService.getById(toolId);
 
-        if (!fetchedTool) {
-          setError("Tool not found");
-          setTool(undefined);
-        } else {
-          setTool(fetchedTool);
-          // Fetch calibration logs for this tool
-          try {
-            const logs = await metrologyService.getCalibrationLogs(
-              fetchedTool.id
-            );
-            setCalibrationLogs(logs);
-          } catch (logError) {
-            console.warn("Could not fetch calibration logs:", logError);
-            // Don't fail the whole page if logs can't be fetched
-            setCalibrationLogs([]);
-          }
-        }
-      } catch (err) {
-        console.error("Error fetching tool:", err);
-        setError(
-          err instanceof Error ? err.message : "Failed to fetch tool data"
-        );
+      if (!fetchedTool) {
+        setError("Tool not found");
         setTool(undefined);
-      } finally {
-        setLoading(false);
+      } else {
+        setTool(fetchedTool);
+        // Fetch calibration logs for this tool
+        try {
+          const logs = await metrologyService.getCalibrationLogs(
+            fetchedTool.id
+          );
+          setCalibrationLogs(logs);
+        } catch (logError) {
+          console.warn("Could not fetch calibration logs:", logError);
+          // Don't fail the whole page if logs can't be fetched
+          setCalibrationLogs([]);
+        }
       }
-    };
+    } catch (err) {
+      console.error("Error fetching tool:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch tool data"
+      );
+      setTool(undefined);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const refreshToolData = async () => {
+    if (!toolId || !tool) return;
+
+    try {
+      const metrologyService = new MetrologyService();
+      const fetchedTool = await metrologyService.getById(toolId);
+
+      if (fetchedTool) {
+        setTool(fetchedTool);
+        // Also refresh calibration logs
+        try {
+          const logs = await metrologyService.getCalibrationLogs(toolId);
+          setCalibrationLogs(logs);
+        } catch (logError) {
+          console.warn("Could not refresh calibration logs:", logError);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to refresh tool data:", error);
+    }
+  };
+
+  useEffect(() => {
     fetchToolData();
   }, [toolId]);
 
@@ -308,24 +331,7 @@ export default function MetrologyToolDetailPage() {
             <CardFooter>
               <AddCalibrationLogModal
                 metrologyTool={tool}
-                onCalibrationLogAdded={() => {
-                  // Refetch calibration logs when a new one is added
-                  const fetchCalibrationLogs = async () => {
-                    try {
-                      const metrologyService = new MetrologyService();
-                      const logs = await metrologyService.getCalibrationLogs(
-                        tool.id
-                      );
-                      setCalibrationLogs(logs);
-                    } catch (error) {
-                      console.error(
-                        "Failed to refresh calibration logs:",
-                        error
-                      );
-                    }
-                  };
-                  fetchCalibrationLogs();
-                }}
+                onCalibrationLogAdded={refreshToolData}
               />
             </CardFooter>
           </Card>
@@ -383,26 +389,7 @@ export default function MetrologyToolDetailPage() {
                             <EditCalibrationLogModal
                               metrologyTool={tool}
                               calibrationLogId={log.id}
-                              onCalibrationLogUpdated={() => {
-                                // Refetch calibration logs when updated
-                                const fetchCalibrationLogs = async () => {
-                                  try {
-                                    const metrologyService =
-                                      new MetrologyService();
-                                    const logs =
-                                      await metrologyService.getCalibrationLogs(
-                                        tool.id
-                                      );
-                                    setCalibrationLogs(logs);
-                                  } catch (error) {
-                                    console.error(
-                                      "Failed to refresh calibration logs:",
-                                      error
-                                    );
-                                  }
-                                };
-                                fetchCalibrationLogs();
-                              }}
+                              onCalibrationLogUpdated={refreshToolData}
                             />
                           </div>
                         </TableCell>
@@ -435,19 +422,17 @@ export default function MetrologyToolDetailPage() {
               />
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Related Documents</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-2">
-              <Button variant="link" asChild className="justify-start px-0">
-                <Link href="#">View SOP (PDF)</Link>
-              </Button>
-              <Button variant="link" asChild className="justify-start px-0">
-                <Link href="#">Manufacturer Specs (PDF)</Link>
-              </Button>
-            </CardContent>
-          </Card>
+          <RelatedDocuments
+            objectId={tool.id}
+            title="Related Documents"
+            description="Upload calibration certificates, SOPs, manuals, and other tool-related documents"
+            defaultDocumentType="Metrology Document"
+            additionalTags={[
+              "metrology",
+              "tool",
+              tool.type?.toLowerCase().replace(/\s+/g, "-") || "unknown",
+            ]}
+          />
         </div>
       </div>
     </div>

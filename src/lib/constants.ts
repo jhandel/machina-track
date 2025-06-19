@@ -53,7 +53,7 @@ export const NAV_ITEMS: NavItem[] = [
 
 // Sample data for select dropdowns, etc.
 export const EQUIPMENT_STATUSES: Equipment['status'][] = ['operational', 'maintenance', 'decommissioned'];
-export const METROLOGY_STATUSES: MetrologyTool['status'][] = ['calibrated', 'due_calibration', 'out_of_service', 'awaiting_calibration'];
+export const METROLOGY_STATUSES: MetrologyTool['status'][] = ['calibrated', 'due_calibration', 'out_of_calibration', 'awaiting_calibration'];
 export const CALIBRATION_RESULTS: CalibrationLog['result'][] = ['pass', 'fail', 'adjusted'];
 export const MAINTENANCE_STATUSES: MaintenanceTask['status'][] = ['pending', 'in_progress', 'completed', 'overdue', 'skipped'];
 

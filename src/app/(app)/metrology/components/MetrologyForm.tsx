@@ -67,7 +67,7 @@ interface FormData {
   status:
     | "calibrated"
     | "due_calibration"
-    | "out_of_service"
+    | "out_of_calibration"
     | "awaiting_calibration";
   imageUrl?: string;
   notes?: string;

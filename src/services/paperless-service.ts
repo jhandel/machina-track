@@ -519,8 +519,8 @@ export class PaperlessService {
      */
     private async waitForTaskCompletionWithProgress(
         taskId: string,
-        maxAttempts = 30,
-        interval = 2000,
+        maxAttempts = 60, // Increased max attempts for more detailed progress
+        interval = 5000,
         onProgress?: (stage: string, progress: number, message: string, details?: any) => void
     ): Promise<number> {
         let attempts = 0;
@@ -819,6 +819,71 @@ export class PaperlessService {
         } catch (error) {
             console.error(`Failed to get document details for ID ${documentId}:`, error);
             throw new Error('Failed to get document details from Paperless-ngx');
+        }
+    }
+
+    /**
+     * Get documents by custom field value
+     * @param fieldName The name of the custom field
+     * @param fieldValue The value to search for
+     */
+    async getDocumentsByCustomField(fieldName: string, fieldValue: string): Promise<any[]> {
+        if (!this.isEnabled()) {
+            throw new Error('Paperless-ngx integration is not enabled');
+        }
+
+        try {
+            const token = await this.getToken();
+
+            // Use the custom_field_query parameter with the correct format
+            // Format: ?custom_field_query=["field", "exact", "value"]
+            const customFieldQuery = JSON.stringify([fieldName, "exact", fieldValue]);
+            const queryParam = `custom_field_query=${encodeURIComponent(customFieldQuery)}`;
+
+            const response = await fetch(`${this.baseUrl}/api/documents/?${queryParam}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Token ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Document search failed: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            return data.results || [];
+        } catch (error) {
+            console.error(`Failed to get documents by custom field "${fieldName}":`, error);
+            throw new Error('Failed to get documents by custom field');
+        }
+    }
+
+    /**
+     * Delete a document from Paperless-ngx
+     * @param documentId The ID of the document to delete
+     */
+    async deleteDocument(documentId: number): Promise<void> {
+        if (!this.isEnabled()) {
+            throw new Error('Paperless-ngx integration is not enabled');
+        }
+
+        try {
+            const token = await this.getToken();
+
+            const response = await fetch(`${this.baseUrl}/api/documents/${documentId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Token ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Document deletion failed: ${response.statusText}`);
+            }
+        } catch (error) {
+            console.error(`Failed to delete document ${documentId}:`, error);
+            throw new Error('Failed to delete document from Paperless-ngx');
         }
     }
 }

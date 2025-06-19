@@ -58,7 +58,7 @@ export function useRealtimeUpload(): UseRealtimeUploadReturn {
             }
 
             // Use fetch for SSE
-            const response = await fetch('/api/dms-upload-enhanced', {
+            const response = await fetch('/api/documents', {
                 method: 'POST',
                 body: formData,
             });
