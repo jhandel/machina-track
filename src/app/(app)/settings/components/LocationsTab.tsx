@@ -1,21 +1,45 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useToast } from '@/hooks/use-toast';
-import { SettingsService } from '@/services';
-import { Plus, Edit2, Trash2, Loader2 } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import type { Location } from '@/lib/database/interfaces';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
+import { SettingsService } from "@/services";
+import { Plus, Edit2, Trash2, Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import type { Location } from "@/lib/database/interfaces";
 
 const locationSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .max(100, "Name must be less than 100 characters"),
 });
 
 type LocationForm = z.infer<typeof locationSchema>;
@@ -31,7 +55,7 @@ export function LocationsTab() {
   const form = useForm<LocationForm>({
     resolver: zodResolver(locationSchema),
     defaultValues: {
-      name: '',
+      name: "",
     },
   });
 
@@ -42,9 +66,9 @@ export function LocationsTab() {
       setLocations(data);
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to fetch locations',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to fetch locations",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -57,7 +81,7 @@ export function LocationsTab() {
 
   const handleCreate = () => {
     setEditingLocation(null);
-    form.reset({ name: '' });
+    form.reset({ name: "" });
     setDialogOpen(true);
   };
 
@@ -73,23 +97,25 @@ export function LocationsTab() {
       if (editingLocation) {
         await SettingsService.updateLocation(editingLocation.id, data);
         toast({
-          title: 'Success',
-          description: 'Location updated successfully',
+          title: "Success",
+          description: "Location updated successfully",
         });
       } else {
         await SettingsService.createLocation(data);
         toast({
-          title: 'Success',
-          description: 'Location created successfully',
+          title: "Success",
+          description: "Location created successfully",
         });
       }
       setDialogOpen(false);
       fetchLocations();
     } catch (error) {
       toast({
-        title: 'Error',
-        description: editingLocation ? 'Failed to update location' : 'Failed to create location',
-        variant: 'destructive',
+        title: "Error",
+        description: editingLocation
+          ? "Failed to update location"
+          : "Failed to create location",
+        variant: "destructive",
       });
     } finally {
       setSubmitting(false);
@@ -104,15 +130,15 @@ export function LocationsTab() {
     try {
       await SettingsService.deleteLocation(location.id);
       toast({
-        title: 'Success',
-        description: 'Location deleted successfully',
+        title: "Success",
+        description: "Location deleted successfully",
       });
       fetchLocations();
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to delete location',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to delete location",
+        variant: "destructive",
       });
     }
   };
@@ -129,7 +155,9 @@ export function LocationsTab() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-lg font-medium">Locations ({locations.length})</h3>
+          <h3 className="text-lg font-medium">
+            Locations ({locations.length})
+          </h3>
           <p className="text-sm text-muted-foreground">
             Manage physical locations in your facility
           </p>
@@ -152,7 +180,10 @@ export function LocationsTab() {
           <TableBody>
             {locations.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center py-6 text-muted-foreground">
+                <TableCell
+                  colSpan={3}
+                  className="text-center py-6 text-muted-foreground"
+                >
                   No locations found. Add your first location to get started.
                 </TableCell>
               </TableRow>
@@ -192,18 +223,20 @@ export function LocationsTab() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingLocation ? 'Edit Location' : 'Add Location'}
+              {editingLocation ? "Edit Location" : "Add Location"}
             </DialogTitle>
             <DialogDescription>
-              {editingLocation 
-                ? 'Update the location information.'
-                : 'Add a new location to your facility.'
-              }
+              {editingLocation
+                ? "Update the location information."
+                : "Add a new location to your facility."}
             </DialogDescription>
           </DialogHeader>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="name"
@@ -217,22 +250,25 @@ export function LocationsTab() {
                   </FormItem>
                 )}
               />
-
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={submitting}>
-                  {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {editingLocation ? 'Update' : 'Create'}
-                </Button>
-              </DialogFooter>
             </form>
           </Form>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={form.handleSubmit(handleSubmit)}
+              disabled={submitting}
+            >
+              {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {editingLocation ? "Update" : "Create"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

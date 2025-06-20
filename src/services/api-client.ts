@@ -71,7 +71,7 @@ class ApiClient {
 
   private buildQueryString(params: Record<string, any>): string {
     const searchParams = new URLSearchParams();
-    
+
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         searchParams.append(key, String(value));
@@ -258,7 +258,7 @@ class ApiClient {
 
   async updateMetrologyTool(id: string, tool: any) {
     return this.request(`/metrology-tools/${id}`, {
-      method: 'PUT', 
+      method: 'PUT',
       body: JSON.stringify(tool),
     });
   }
@@ -346,7 +346,7 @@ class ApiClient {
   }
 
   // Settings API methods
-  
+
   // Locations
   async getLocations() {
     return this.request('/settings/locations');
@@ -468,6 +468,35 @@ class ApiClient {
 
   async deleteConsumableType(id: string) {
     return this.request(`/settings/consumable-types/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Users API methods
+  async getUsers() {
+    return this.request('/users');
+  }
+
+  async getUserById(id: string) {
+    return this.request(`/users/${id}`);
+  }
+
+  async createUser(data: { name: string; email: string; password: string }) {
+    return this.request('/users', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async resetUserPassword(id: string, data: { password: string }) {
+    return this.request(`/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteUser(id: string) {
+    return this.request(`/users/${id}`, {
       method: 'DELETE',
     });
   }

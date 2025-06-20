@@ -33,15 +33,15 @@ export { MachineLogService } from './machine-log-service';
 export { PaperlessService, paperlessService } from './paperless-service';
 
 // Re-export types from lib for convenience
-export type { 
-  Equipment, 
-  MetrologyTool, 
-  CalibrationLog, 
-  Consumable, 
-  MaintenanceTask, 
+export type {
+  Equipment,
+  MetrologyTool,
+  CalibrationLog,
+  Consumable,
+  MaintenanceTask,
   ServiceRecord,
   MachineLogEntry,
-  DashboardSummary 
+  DashboardSummary
 } from '@/lib/types';
 
 // Settings Service
@@ -53,3 +53,11 @@ export type {
   CreateConsumableMaterialRequest,
   CreateConsumableTypeRequest
 } from './settings-service';
+
+// User Service
+export { UserService } from './user-service';
+export type {
+  User as UserType,
+  CreateUserRequest,
+  ResetPasswordRequest
+} from './user-service';

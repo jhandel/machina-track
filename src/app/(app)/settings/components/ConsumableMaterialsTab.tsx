@@ -1,21 +1,45 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useToast } from '@/hooks/use-toast';
-import { SettingsService } from '@/services';
-import { Plus, Edit2, Trash2, Loader2 } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import type { ConsumableMaterial } from '@/lib/database/interfaces';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
+import { SettingsService } from "@/services";
+import { Plus, Edit2, Trash2, Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import type { ConsumableMaterial } from "@/lib/database/interfaces";
 
 const materialSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .max(100, "Name must be less than 100 characters"),
 });
 
 type MaterialForm = z.infer<typeof materialSchema>;
@@ -24,14 +48,15 @@ export function ConsumableMaterialsTab() {
   const [materials, setMaterials] = useState<ConsumableMaterial[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingMaterial, setEditingMaterial] = useState<ConsumableMaterial | null>(null);
+  const [editingMaterial, setEditingMaterial] =
+    useState<ConsumableMaterial | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<MaterialForm>({
     resolver: zodResolver(materialSchema),
     defaultValues: {
-      name: '',
+      name: "",
     },
   });
 
@@ -42,9 +67,9 @@ export function ConsumableMaterialsTab() {
       setMaterials(data);
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to fetch consumable materials',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to fetch consumable materials",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -57,7 +82,7 @@ export function ConsumableMaterialsTab() {
 
   const handleCreate = () => {
     setEditingMaterial(null);
-    form.reset({ name: '' });
+    form.reset({ name: "" });
     setDialogOpen(true);
   };
 
@@ -71,25 +96,30 @@ export function ConsumableMaterialsTab() {
     try {
       setSubmitting(true);
       if (editingMaterial) {
-        await SettingsService.updateConsumableMaterial(editingMaterial.id, data);
+        await SettingsService.updateConsumableMaterial(
+          editingMaterial.id,
+          data
+        );
         toast({
-          title: 'Success',
-          description: 'Consumable material updated successfully',
+          title: "Success",
+          description: "Consumable material updated successfully",
         });
       } else {
         await SettingsService.createConsumableMaterial(data);
         toast({
-          title: 'Success',
-          description: 'Consumable material created successfully',
+          title: "Success",
+          description: "Consumable material created successfully",
         });
       }
       setDialogOpen(false);
       fetchMaterials();
     } catch (error) {
       toast({
-        title: 'Error',
-        description: editingMaterial ? 'Failed to update consumable material' : 'Failed to create consumable material',
-        variant: 'destructive',
+        title: "Error",
+        description: editingMaterial
+          ? "Failed to update consumable material"
+          : "Failed to create consumable material",
+        variant: "destructive",
       });
     } finally {
       setSubmitting(false);
@@ -104,15 +134,15 @@ export function ConsumableMaterialsTab() {
     try {
       await SettingsService.deleteConsumableMaterial(material.id);
       toast({
-        title: 'Success',
-        description: 'Consumable material deleted successfully',
+        title: "Success",
+        description: "Consumable material deleted successfully",
       });
       fetchMaterials();
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to delete consumable material',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to delete consumable material",
+        variant: "destructive",
       });
     }
   };
@@ -129,7 +159,9 @@ export function ConsumableMaterialsTab() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-lg font-medium">Consumable Materials ({materials.length})</h3>
+          <h3 className="text-lg font-medium">
+            Consumable Materials ({materials.length})
+          </h3>
           <p className="text-sm text-muted-foreground">
             Manage materials that consumables are made from
           </p>
@@ -152,8 +184,12 @@ export function ConsumableMaterialsTab() {
           <TableBody>
             {materials.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center py-6 text-muted-foreground">
-                  No consumable materials found. Add your first material to get started.
+                <TableCell
+                  colSpan={3}
+                  className="text-center py-6 text-muted-foreground"
+                >
+                  No consumable materials found. Add your first material to get
+                  started.
                 </TableCell>
               </TableRow>
             ) : (
@@ -192,18 +228,22 @@ export function ConsumableMaterialsTab() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingMaterial ? 'Edit Consumable Material' : 'Add Consumable Material'}
+              {editingMaterial
+                ? "Edit Consumable Material"
+                : "Add Consumable Material"}
             </DialogTitle>
             <DialogDescription>
-              {editingMaterial 
-                ? 'Update the consumable material information.'
-                : 'Add a new consumable material to your system.'
-              }
+              {editingMaterial
+                ? "Update the consumable material information."
+                : "Add a new consumable material to your system."}
             </DialogDescription>
           </DialogHeader>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="name"
@@ -217,22 +257,25 @@ export function ConsumableMaterialsTab() {
                   </FormItem>
                 )}
               />
-
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={submitting}>
-                  {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {editingMaterial ? 'Update' : 'Create'}
-                </Button>
-              </DialogFooter>
             </form>
           </Form>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={form.handleSubmit(handleSubmit)}
+              disabled={submitting}
+            >
+              {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {editingMaterial ? "Update" : "Create"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

@@ -1,21 +1,45 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useToast } from '@/hooks/use-toast';
-import { SettingsService } from '@/services';
-import { Plus, Edit2, Trash2, Loader2 } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import type { MetrologyToolType } from '@/lib/database/interfaces';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
+import { SettingsService } from "@/services";
+import { Plus, Edit2, Trash2, Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import type { MetrologyToolType } from "@/lib/database/interfaces";
 
 const toolTypeSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .max(100, "Name must be less than 100 characters"),
 });
 
 type ToolTypeForm = z.infer<typeof toolTypeSchema>;
@@ -24,14 +48,15 @@ export function MetrologyToolTypesTab() {
   const [toolTypes, setToolTypes] = useState<MetrologyToolType[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingToolType, setEditingToolType] = useState<MetrologyToolType | null>(null);
+  const [editingToolType, setEditingToolType] =
+    useState<MetrologyToolType | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<ToolTypeForm>({
     resolver: zodResolver(toolTypeSchema),
     defaultValues: {
-      name: '',
+      name: "",
     },
   });
 
@@ -42,9 +67,9 @@ export function MetrologyToolTypesTab() {
       setToolTypes(data);
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to fetch metrology tool types',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to fetch metrology tool types",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -57,7 +82,7 @@ export function MetrologyToolTypesTab() {
 
   const handleCreate = () => {
     setEditingToolType(null);
-    form.reset({ name: '' });
+    form.reset({ name: "" });
     setDialogOpen(true);
   };
 
@@ -73,23 +98,25 @@ export function MetrologyToolTypesTab() {
       if (editingToolType) {
         await SettingsService.updateMetrologyToolType(editingToolType.id, data);
         toast({
-          title: 'Success',
-          description: 'Metrology tool type updated successfully',
+          title: "Success",
+          description: "Metrology tool type updated successfully",
         });
       } else {
         await SettingsService.createMetrologyToolType(data);
         toast({
-          title: 'Success',
-          description: 'Metrology tool type created successfully',
+          title: "Success",
+          description: "Metrology tool type created successfully",
         });
       }
       setDialogOpen(false);
       fetchToolTypes();
     } catch (error) {
       toast({
-        title: 'Error',
-        description: editingToolType ? 'Failed to update metrology tool type' : 'Failed to create metrology tool type',
-        variant: 'destructive',
+        title: "Error",
+        description: editingToolType
+          ? "Failed to update metrology tool type"
+          : "Failed to create metrology tool type",
+        variant: "destructive",
       });
     } finally {
       setSubmitting(false);
@@ -104,15 +131,15 @@ export function MetrologyToolTypesTab() {
     try {
       await SettingsService.deleteMetrologyToolType(toolType.id);
       toast({
-        title: 'Success',
-        description: 'Metrology tool type deleted successfully',
+        title: "Success",
+        description: "Metrology tool type deleted successfully",
       });
       fetchToolTypes();
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to delete metrology tool type',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to delete metrology tool type",
+        variant: "destructive",
       });
     }
   };
@@ -129,7 +156,9 @@ export function MetrologyToolTypesTab() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-lg font-medium">Metrology Tool Types ({toolTypes.length})</h3>
+          <h3 className="text-lg font-medium">
+            Metrology Tool Types ({toolTypes.length})
+          </h3>
           <p className="text-sm text-muted-foreground">
             Manage types of metrology tools used for quality control
           </p>
@@ -152,8 +181,12 @@ export function MetrologyToolTypesTab() {
           <TableBody>
             {toolTypes.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center py-6 text-muted-foreground">
-                  No metrology tool types found. Add your first tool type to get started.
+                <TableCell
+                  colSpan={3}
+                  className="text-center py-6 text-muted-foreground"
+                >
+                  No metrology tool types found. Add your first tool type to get
+                  started.
                 </TableCell>
               </TableRow>
             ) : (
@@ -192,18 +225,22 @@ export function MetrologyToolTypesTab() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingToolType ? 'Edit Metrology Tool Type' : 'Add Metrology Tool Type'}
+              {editingToolType
+                ? "Edit Metrology Tool Type"
+                : "Add Metrology Tool Type"}
             </DialogTitle>
             <DialogDescription>
-              {editingToolType 
-                ? 'Update the metrology tool type information.'
-                : 'Add a new metrology tool type to your system.'
-              }
+              {editingToolType
+                ? "Update the metrology tool type information."
+                : "Add a new metrology tool type to your system."}
             </DialogDescription>
           </DialogHeader>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="name"
@@ -217,22 +254,25 @@ export function MetrologyToolTypesTab() {
                   </FormItem>
                 )}
               />
-
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={submitting}>
-                  {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {editingToolType ? 'Update' : 'Create'}
-                </Button>
-              </DialogFooter>
             </form>
           </Form>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={form.handleSubmit(handleSubmit)}
+              disabled={submitting}
+            >
+              {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {editingToolType ? "Update" : "Create"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

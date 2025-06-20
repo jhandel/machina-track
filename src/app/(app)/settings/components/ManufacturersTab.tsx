@@ -1,21 +1,45 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useToast } from '@/hooks/use-toast';
-import { SettingsService } from '@/services';
-import { Plus, Edit2, Trash2, Loader2 } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import type { Manufacturer } from '@/lib/database/interfaces';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
+import { SettingsService } from "@/services";
+import { Plus, Edit2, Trash2, Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import type { Manufacturer } from "@/lib/database/interfaces";
 
 const manufacturerSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .max(100, "Name must be less than 100 characters"),
 });
 
 type ManufacturerForm = z.infer<typeof manufacturerSchema>;
@@ -24,14 +48,15 @@ export function ManufacturersTab() {
   const [manufacturers, setManufacturers] = useState<Manufacturer[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingManufacturer, setEditingManufacturer] = useState<Manufacturer | null>(null);
+  const [editingManufacturer, setEditingManufacturer] =
+    useState<Manufacturer | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<ManufacturerForm>({
     resolver: zodResolver(manufacturerSchema),
     defaultValues: {
-      name: '',
+      name: "",
     },
   });
 
@@ -42,9 +67,9 @@ export function ManufacturersTab() {
       setManufacturers(data);
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to fetch manufacturers',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to fetch manufacturers",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -57,7 +82,7 @@ export function ManufacturersTab() {
 
   const handleCreate = () => {
     setEditingManufacturer(null);
-    form.reset({ name: '' });
+    form.reset({ name: "" });
     setDialogOpen(true);
   };
 
@@ -73,23 +98,25 @@ export function ManufacturersTab() {
       if (editingManufacturer) {
         await SettingsService.updateManufacturer(editingManufacturer.id, data);
         toast({
-          title: 'Success',
-          description: 'Manufacturer updated successfully',
+          title: "Success",
+          description: "Manufacturer updated successfully",
         });
       } else {
         await SettingsService.createManufacturer(data);
         toast({
-          title: 'Success',
-          description: 'Manufacturer created successfully',
+          title: "Success",
+          description: "Manufacturer created successfully",
         });
       }
       setDialogOpen(false);
       fetchManufacturers();
     } catch (error) {
       toast({
-        title: 'Error',
-        description: editingManufacturer ? 'Failed to update manufacturer' : 'Failed to create manufacturer',
-        variant: 'destructive',
+        title: "Error",
+        description: editingManufacturer
+          ? "Failed to update manufacturer"
+          : "Failed to create manufacturer",
+        variant: "destructive",
       });
     } finally {
       setSubmitting(false);
@@ -104,15 +131,15 @@ export function ManufacturersTab() {
     try {
       await SettingsService.deleteManufacturer(manufacturer.id);
       toast({
-        title: 'Success',
-        description: 'Manufacturer deleted successfully',
+        title: "Success",
+        description: "Manufacturer deleted successfully",
       });
       fetchManufacturers();
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to delete manufacturer',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to delete manufacturer",
+        variant: "destructive",
       });
     }
   };
@@ -129,7 +156,9 @@ export function ManufacturersTab() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-lg font-medium">Manufacturers ({manufacturers.length})</h3>
+          <h3 className="text-lg font-medium">
+            Manufacturers ({manufacturers.length})
+          </h3>
           <p className="text-sm text-muted-foreground">
             Manage equipment and tool manufacturers
           </p>
@@ -152,14 +181,20 @@ export function ManufacturersTab() {
           <TableBody>
             {manufacturers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center py-6 text-muted-foreground">
-                  No manufacturers found. Add your first manufacturer to get started.
+                <TableCell
+                  colSpan={3}
+                  className="text-center py-6 text-muted-foreground"
+                >
+                  No manufacturers found. Add your first manufacturer to get
+                  started.
                 </TableCell>
               </TableRow>
             ) : (
               manufacturers.map((manufacturer) => (
                 <TableRow key={manufacturer.id}>
-                  <TableCell className="font-medium">{manufacturer.name}</TableCell>
+                  <TableCell className="font-medium">
+                    {manufacturer.name}
+                  </TableCell>
                   <TableCell>
                     {new Date(manufacturer.createdAt).toLocaleDateString()}
                   </TableCell>
@@ -192,18 +227,20 @@ export function ManufacturersTab() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingManufacturer ? 'Edit Manufacturer' : 'Add Manufacturer'}
+              {editingManufacturer ? "Edit Manufacturer" : "Add Manufacturer"}
             </DialogTitle>
             <DialogDescription>
-              {editingManufacturer 
-                ? 'Update the manufacturer information.'
-                : 'Add a new manufacturer to your system.'
-              }
+              {editingManufacturer
+                ? "Update the manufacturer information."
+                : "Add a new manufacturer to your system."}
             </DialogDescription>
           </DialogHeader>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="name"
@@ -217,22 +254,25 @@ export function ManufacturersTab() {
                   </FormItem>
                 )}
               />
-
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={submitting}>
-                  {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {editingManufacturer ? 'Update' : 'Create'}
-                </Button>
-              </DialogFooter>
             </form>
           </Form>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={form.handleSubmit(handleSubmit)}
+              disabled={submitting}
+            >
+              {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {editingManufacturer ? "Update" : "Create"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

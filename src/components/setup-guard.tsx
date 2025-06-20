@@ -5,46 +5,45 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 
-export default function HomePage() {
-  const { status } = useSession();
+export default function SetupGuard({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [isCheckingSetup, setIsCheckingSetup] = useState(true);
+  const [isFirstUser, setIsFirstUser] = useState(false);
+  const { data: session, status } = useSession();
   const router = useRouter();
-  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    const handleRedirect = async () => {
-      if (status === "loading") {
-        return; // Still loading session
-      }
-
-      if (status === "authenticated") {
-        router.push("/dashboard");
-        return;
-      }
-
-      // User is not authenticated, check if setup is needed
+    const checkSetup = async () => {
       try {
         const response = await fetch("/api/auth/setup-check");
         const data = await response.json();
 
         if (data.isFirstUser) {
-          console.log("Redirecting to setup...");
+          setIsFirstUser(true);
           router.push("/setup");
-        } else {
-          console.log("Redirecting to signin...");
+        } else if (status === "unauthenticated") {
           router.push("/auth/signin");
         }
       } catch (error) {
         console.error("Setup check failed:", error);
-        router.push("/auth/signin");
+        // Fallback to login page
+        if (status === "unauthenticated") {
+          router.push("/auth/signin");
+        }
       } finally {
-        setIsChecking(false);
+        setIsCheckingSetup(false);
       }
     };
 
-    handleRedirect();
+    if (status !== "loading") {
+      checkSetup();
+    }
   }, [status, router]);
 
-  if (status === "loading" || isChecking) {
+  if (status === "loading" || isCheckingSetup) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -55,5 +54,13 @@ export default function HomePage() {
     );
   }
 
-  return null; // Should not reach here as we redirect
+  if (isFirstUser) {
+    return null; // Redirecting to setup
+  }
+
+  if (status === "unauthenticated") {
+    return null; // Redirecting to signin
+  }
+
+  return <>{children}</>;
 }

@@ -1,13 +1,13 @@
-import { Navigation } from '@/components/common/Navigation';
-import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
-import { AppLogo } from '@/components/common/AppLogo';
-import { Toaster } from '@/components/ui/toaster';
+import { Navigation } from "@/components/common/Navigation";
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import { AppLogo } from "@/components/common/AppLogo";
+import { Toaster } from "@/components/ui/toaster";
 
-export default function AppLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider defaultOpen={true}>
       <Navigation />

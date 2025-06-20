@@ -1,21 +1,45 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useToast } from '@/hooks/use-toast';
-import { SettingsService } from '@/services';
-import { Plus, Edit2, Trash2, Loader2 } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import type { ConsumableType } from '@/lib/database/interfaces';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
+import { SettingsService } from "@/services";
+import { Plus, Edit2, Trash2, Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import type { ConsumableType } from "@/lib/database/interfaces";
 
 const toolTypeSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .max(100, "Name must be less than 100 characters"),
 });
 
 type ToolTypeForm = z.infer<typeof toolTypeSchema>;
@@ -24,14 +48,16 @@ export function ConsumableTypesTab() {
   const [toolTypes, setToolTypes] = useState<ConsumableType[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingToolType, setEditingToolType] = useState<ConsumableType | null>(null);
+  const [editingToolType, setEditingToolType] = useState<ConsumableType | null>(
+    null
+  );
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<ToolTypeForm>({
     resolver: zodResolver(toolTypeSchema),
     defaultValues: {
-      name: '',
+      name: "",
     },
   });
 
@@ -42,9 +68,9 @@ export function ConsumableTypesTab() {
       setToolTypes(data);
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to fetch consumable types',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to fetch consumable types",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -57,7 +83,7 @@ export function ConsumableTypesTab() {
 
   const handleCreate = () => {
     setEditingToolType(null);
-    form.reset({ name: '' });
+    form.reset({ name: "" });
     setDialogOpen(true);
   };
 
@@ -73,23 +99,25 @@ export function ConsumableTypesTab() {
       if (editingToolType) {
         await SettingsService.updateConsumableType(editingToolType.id, data);
         toast({
-          title: 'Success',
-          description: 'Consumable type updated successfully',
+          title: "Success",
+          description: "Consumable type updated successfully",
         });
       } else {
         await SettingsService.createConsumableType(data);
         toast({
-          title: 'Success',
-          description: 'Consumable type created successfully',
+          title: "Success",
+          description: "Consumable type created successfully",
         });
       }
       setDialogOpen(false);
       fetchToolTypes();
     } catch (error) {
       toast({
-        title: 'Error',
-        description: editingToolType ? 'Failed to update consumable type' : 'Failed to create consumable type',
-        variant: 'destructive',
+        title: "Error",
+        description: editingToolType
+          ? "Failed to update consumable type"
+          : "Failed to create consumable type",
+        variant: "destructive",
       });
     } finally {
       setSubmitting(false);
@@ -104,15 +132,15 @@ export function ConsumableTypesTab() {
     try {
       await SettingsService.deleteConsumableType(toolType.id);
       toast({
-        title: 'Success',
-        description: 'Consumable type deleted successfully',
+        title: "Success",
+        description: "Consumable type deleted successfully",
       });
       fetchToolTypes();
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to delete consumable type',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to delete consumable type",
+        variant: "destructive",
       });
     }
   };
@@ -152,7 +180,10 @@ export function ConsumableTypesTab() {
           <TableBody>
             {toolTypes.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center text-muted-foreground">
+                <TableCell
+                  colSpan={3}
+                  className="text-center text-muted-foreground"
+                >
                   No consumable types found. Add one to get started.
                 </TableCell>
               </TableRow>
@@ -192,16 +223,19 @@ export function ConsumableTypesTab() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingToolType ? 'Edit Consumable Type' : 'Add Consumable Type'}
+              {editingToolType ? "Edit Consumable Type" : "Add Consumable Type"}
             </DialogTitle>
             <DialogDescription>
               {editingToolType
-                ? 'Update the consumable type details below.'
-                : 'Add a new consumable type to your system.'}
+                ? "Update the consumable type details below."
+                : "Add a new consumable type to your system."}
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="name"
@@ -218,21 +252,25 @@ export function ConsumableTypesTab() {
                   </FormItem>
                 )}
               />
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={submitting}>
-                  {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {editingToolType ? 'Update' : 'Create'}
-                </Button>
-              </DialogFooter>
             </form>
           </Form>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={form.handleSubmit(handleSubmit)}
+              disabled={submitting}
+            >
+              {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {editingToolType ? "Update" : "Create"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
