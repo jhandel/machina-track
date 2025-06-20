@@ -22,10 +22,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight, LogOut, User } from "lucide-react";
 import React from "react";
+import { usePermission } from "@/components/providers/AbilityProvider";
 
 export function Navigation() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const { can } = usePermission();
   const [openSubmenus, setOpenSubmenus] = React.useState<
     Record<string, boolean>
   >({});
@@ -38,13 +40,51 @@ export function Navigation() {
     signOut({ callbackUrl: "/auth/signin" });
   };
 
+  // Helper function to get subject from href
+  const getSubjectFromHref = (href: string) => {
+    const pathToSubjectMap: Record<
+      string,
+      | "Dashboard"
+      | "Equipment"
+      | "Metrology"
+      | "Inventory"
+      | "Maintenance"
+      | "Settings"
+    > = {
+      "/": "Dashboard",
+      "/equipment": "Equipment",
+      "/metrology": "Metrology",
+      "/inventory": "Inventory",
+      "/maintenance": "Maintenance",
+      "/settings": "Settings",
+    };
+    return pathToSubjectMap[href] || "Dashboard";
+  };
+
   const renderNavItem = (item: NavItem, isSubItem: boolean = false) => {
+    // Check if user can access this navigation item
+    const subject = getSubjectFromHref(item.href);
+    if (!can("read", subject)) {
+      return null; // Hide the item if user doesn't have permission
+    }
+
     const isActive = item.children
       ? pathname.startsWith(item.href)
       : pathname === item.href;
     const isSubmenuOpen = openSubmenus[item.title] ?? false;
 
     if (item.children) {
+      // Filter children based on permissions
+      const accessibleChildren = item.children.filter((child) => {
+        const childSubject = getSubjectFromHref(child.href);
+        return can("read", childSubject);
+      });
+
+      // Don't render parent if no children are accessible
+      if (accessibleChildren.length === 0) {
+        return null;
+      }
+
       return (
         <SidebarMenuItem key={item.title}>
           <SidebarMenuButton
@@ -70,7 +110,7 @@ export function Navigation() {
             <SidebarMenuSub
               id={`submenu-${item.title.toLowerCase().replace(" ", "-")}`}
             >
-              {item.children.map((child) => (
+              {accessibleChildren.map((child) => (
                 <SidebarMenuSubItem key={child.title}>
                   <Link href={child.href}>
                     <SidebarMenuSubButton isActive={pathname === child.href}>
@@ -119,11 +159,16 @@ export function Navigation() {
       <SidebarFooter className="p-4 border-t border-sidebar-border">
         <div className="flex flex-col gap-2">
           {session?.user && (
-            <div className="flex items-center gap-2 text-sm  px-2 py-1">
-              <User className="h-4 w-4" />
-              <span className="truncate">
-                {session.user.name || session.user.email}
-              </span>
+            <div className="flex flex-col gap-1 text-sm px-2 py-1">
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                <span className="truncate">
+                  {session.user.name || session.user.email}
+                </span>
+              </div>
+              <div className="text-xs text-muted-foreground ml-6">
+                Role: {session.user.role || "VIEWER"}
+              </div>
             </div>
           )}
           <Button variant="default" onClick={handleSignOut} className="w-full">

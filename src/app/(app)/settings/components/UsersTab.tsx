@@ -38,9 +38,20 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Plus, Trash2, Key, Loader2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Plus, Trash2, Key, Edit, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { UserService, type User } from "@/services/user-service";
+import {
+  UserService,
+  type User,
+  type UpdateUserRequest,
+} from "@/services/user-service";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -58,13 +69,24 @@ const resetPasswordSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters long"),
 });
 
+const updateUserSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .max(100, "Name must be less than 100 characters"),
+  email: z.string().email("Valid email is required"),
+  role: z.enum(["ADMIN", "MANAGER", "OPERATOR", "VIEWER"]),
+});
+
 type CreateUserForm = z.infer<typeof createUserSchema>;
 type ResetPasswordForm = z.infer<typeof resetPasswordSchema>;
+type UpdateUserForm = z.infer<typeof updateUserSchema>;
 
 export function UsersTab() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -83,6 +105,15 @@ export function UsersTab() {
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
       password: "",
+    },
+  });
+
+  const updateUserForm = useForm<UpdateUserForm>({
+    resolver: zodResolver(updateUserSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      role: "VIEWER",
     },
   });
 
@@ -131,6 +162,34 @@ export function UsersTab() {
         title: "Error",
         description:
           error instanceof Error ? error.message : "Failed to create user",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleUpdateUser = async (data: UpdateUserForm) => {
+    if (!selectedUser) return;
+
+    try {
+      setSubmitting(true);
+      await UserService.updateUser(selectedUser.id, data);
+
+      updateUserForm.reset();
+      setEditDialogOpen(false);
+      setSelectedUser(null);
+      fetchUsers();
+
+      toast({
+        title: "Success",
+        description: "User updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to update user",
         variant: "destructive",
       });
     } finally {
@@ -190,6 +249,16 @@ export function UsersTab() {
     setResetPasswordDialogOpen(true);
   };
 
+  const openEditDialog = (user: User) => {
+    setSelectedUser(user);
+    updateUserForm.reset({
+      name: user.name || "",
+      email: user.email,
+      role: user.role as any,
+    });
+    setEditDialogOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-32">
@@ -219,15 +288,16 @@ export function UsersTab() {
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
+              <TableHead>Role</TableHead>
               <TableHead>Created</TableHead>
-              <TableHead className="w-[150px]">Actions</TableHead>
+              <TableHead className="w-[200px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {users.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={4}
+                  colSpan={5}
                   className="text-center py-6 text-muted-foreground"
                 >
                   No users found.
@@ -241,10 +311,23 @@ export function UsersTab() {
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-secondary text-secondary-foreground rounded-md">
+                      {user.role}
+                    </span>
+                  </TableCell>
+                  <TableCell>
                     {new Date(user.createdAt).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openEditDialog(user)}
+                        title="Edit User"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
@@ -371,6 +454,100 @@ export function UsersTab() {
             >
               {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create User
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>
+              Update user information for{" "}
+              {selectedUser?.name || selectedUser?.email}
+            </DialogDescription>
+          </DialogHeader>
+
+          <Form {...updateUserForm}>
+            <form
+              onSubmit={updateUserForm.handleSubmit(handleUpdateUser)}
+              className="space-y-4"
+            >
+              <FormField
+                control={updateUserForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter full name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={updateUserForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="Enter email address"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={updateUserForm.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Role</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="ADMIN">Admin</SelectItem>
+                        <SelectItem value="MANAGER">Manager</SelectItem>
+                        <SelectItem value="OPERATOR">Operator</SelectItem>
+                        <SelectItem value="VIEWER">Viewer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </form>
+          </Form>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setEditDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={updateUserForm.handleSubmit(handleUpdateUser)}
+              disabled={submitting}
+            >
+              {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Update User
             </Button>
           </DialogFooter>
         </DialogContent>

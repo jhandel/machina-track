@@ -214,6 +214,13 @@ model service_records {
 }
 
 // NextAuth.js models
+enum UserRole {
+  ADMIN
+  MANAGER
+  OPERATOR
+  VIEWER
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -221,6 +228,7 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?
+  role          UserRole  @default(VIEWER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   accounts      Account[]

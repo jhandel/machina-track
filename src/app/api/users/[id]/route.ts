@@ -9,6 +9,14 @@ const resetPasswordSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters long'),
 });
 
+const updateUserSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters').optional(),
+  email: z.string().email('Valid email is required').optional(),
+  role: z.enum(['ADMIN', 'MANAGER', 'OPERATOR', 'VIEWER']).optional(),
+}).refine(data => Object.keys(data).length > 0, {
+  message: "At least one field must be provided for update"
+});
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -21,6 +29,7 @@ export async function GET(
         name: true,
         email: true,
         emailVerified: true,
+        role: true,
         createdAt: true,
         updatedAt: true,
         // Don't include password in the response
@@ -64,16 +73,61 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { password } = resetPasswordSchema.parse(body);
 
-    // Hash the new password
-    const hashedPassword = await bcrypt.hash(password, 12);
+    // Check if this is a password reset request
+    if (body.password && Object.keys(body).length === 1) {
+      const { password } = resetPasswordSchema.parse(body);
 
-    // Update user's password
+      // Hash the new password
+      const hashedPassword = await bcrypt.hash(password, 12);
+
+      // Update user's password
+      const updatedUser = await prisma.user.update({
+        where: { id: params.id },
+        data: {
+          password: hashedPassword,
+          updatedAt: new Date(),
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          emailVerified: true,
+          role: true,
+          createdAt: true,
+          updatedAt: true,
+          // Don't include password in the response
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: updatedUser,
+      });
+    }
+
+    // Otherwise, this is a general user update
+    const updateData = updateUserSchema.parse(body);
+
+    // Check if email is being changed and if it's already taken
+    if (updateData.email && updateData.email !== user.email) {
+      const existingUser = await prisma.user.findUnique({
+        where: { email: updateData.email },
+      });
+
+      if (existingUser) {
+        return NextResponse.json(
+          { error: 'Email address is already in use' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Update user
     const updatedUser = await prisma.user.update({
       where: { id: params.id },
       data: {
-        password: hashedPassword,
+        ...updateData,
         updatedAt: new Date(),
       },
       select: {
@@ -81,6 +135,7 @@ export async function PUT(
         name: true,
         email: true,
         emailVerified: true,
+        role: true,
         createdAt: true,
         updatedAt: true,
         // Don't include password in the response
@@ -99,9 +154,9 @@ export async function PUT(
       );
     }
 
-    console.error('Error updating user password:', error);
+    console.error('Error updating user:', error);
     return NextResponse.json(
-      { error: 'Failed to update user password' },
+      { error: 'Failed to update user' },
       { status: 500 }
     );
   }

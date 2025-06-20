@@ -10,6 +10,7 @@ export interface User {
   name: string | null;
   email: string;
   emailVerified: Date | null;
+  role: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,6 +23,12 @@ export interface CreateUserRequest {
 
 export interface ResetPasswordRequest {
   password: string;
+}
+
+export interface UpdateUserRequest {
+  name?: string;
+  email?: string;
+  role?: 'ADMIN' | 'MANAGER' | 'OPERATOR' | 'VIEWER';
 }
 
 export class UserService {
@@ -46,6 +53,14 @@ export class UserService {
     const response = await apiClient.createUser(data);
     if (!response.success) {
       throw new Error(response.error || 'Failed to create user');
+    }
+    return response.data as User;
+  }
+
+  static async updateUser(id: string, data: UpdateUserRequest): Promise<User> {
+    const response = await apiClient.updateUser(id, data);
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to update user');
     }
     return response.data as User;
   }

@@ -488,6 +488,13 @@ class ApiClient {
     });
   }
 
+  async updateUser(id: string, data: { name?: string; email?: string; role?: string }) {
+    return this.request(`/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
   async resetUserPassword(id: string, data: { password: string }) {
     return this.request(`/users/${id}`, {
       method: 'PUT',

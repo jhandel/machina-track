@@ -19,6 +19,7 @@ export async function GET() {
         name: true,
         email: true,
         emailVerified: true,
+        role: true,
         createdAt: true,
         updatedAt: true,
         // Don't include password in the response
@@ -73,6 +74,7 @@ export async function POST(request: NextRequest) {
         name: true,
         email: true,
         emailVerified: true,
+        role: true,
         createdAt: true,
         updatedAt: true,
         // Don't include password in the response

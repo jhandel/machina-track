@@ -1,9 +1,11 @@
 import NextAuth, { DefaultSession } from "next-auth"
+import { UserRole } from "@/lib/abilities"
 
 declare module "next-auth" {
     interface Session {
         user: {
             id: string
+            role: UserRole
         } & DefaultSession["user"]
     }
 
@@ -11,6 +13,7 @@ declare module "next-auth" {
         id: string
         email: string
         name?: string | null
+        role: UserRole
     }
 }
 
